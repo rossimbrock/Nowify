@@ -1,386 +1,224 @@
 <template>
-  <div id="app">
-    <div
-      v-if="player.playing"
-      class="now-playing"
-      :class="getNowPlayingClass()"
+  <div class="authorise">
+    <h1 class="authorise__heading">Nowify</h1>
+
+    <p class="authorise__copy">
+      Nowify is a simple Spotify 'Now Playing' screen designed for the Raspberry
+      Pi. Login with Spotify below and start playing some music!
+    </p>
+
+    <button
+      class="authorise__button button button--authorise"
+      @click="initAuthorise"
     >
-      <div class="now-playing__cover">
-        <img
-          :src="player.trackAlbum.image"
-          :alt="player.trackTitle"
-          class="now-playing__image"
-        />
-      </div>
-      <div class="now-playing__details">
-        <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
-        <h2 class="now-playing__artists" v-text="getTrackArtists"></h2>
-      </div>
-    </div>
-    <div v-else class="now-playing" :class="getNowPlayingClass()">
-      <h1 class="now-playing__idle-heading">No music is playing 😔</h1>
-    </div>
-    <!-- Playback Controls -->
-    <div id="controls" v-if="player.playing">
-      <button @click="playPause">
-        {{ player.playing ? "Pause" : "Play" }}
-      </button>
-      <button @click="previousTrack">Previous</button>
-      <button @click="nextTrack">Next</button>
-    </div>
+      Login with Spotify
+    </button>
+
+    <p class="authorise__credit">
+      <a href="https://github.com/jonashcroft/Nowify">View on GitHub</a>
+    </p>
   </div>
 </template>
 
 <script>
-import * as Vibrant from 'node-vibrant'
-
 import props from '@/utils/props.js'
 
+const searchParams = new URLSearchParams()
+const currentParams = new URLSearchParams(window.location.search)
+
 export default {
-  name: 'NowPlaying',
+  name: 'Authorise',
+
+  components: {},
 
   props: {
     auth: props.auth,
-    endpoints: props.endpoints,
-    player: props.player
+    endpoints: props.endpoints
   },
 
   data() {
-    return {
-      pollPlaying: '',
-      playerResponse: {},
-      playerData: this.getEmptyPlayer(),
-      colourPalette: '',
-      swatches: []
-    }
+    return {}
   },
 
-  computed: {
-    /**
-     * Return a comma-separated list of track artists.
-     * @return {String}
-     */
-    getTrackArtists() {
-      return this.player.trackArtists.join(', ')
-    }
-  },
+  computed: {},
 
   mounted() {
-    this.setDataInterval()
-  },
+    /**
+     * Set access token on load.
+     */
+    this.getUrlAuthCode()
 
-  beforeDestroy() {
-    clearInterval(this.pollPlaying)
+    /**
+     * Refresh token already exists - we must get a new one.
+     */
+    if (this.auth.refreshToken) {
+      this.requestAccessTokens('refresh_token')
+    }
   },
 
   methods: {
     /**
-     * Play or pause the current track.
+     * Initial Spotify auth, redirects the user to
+     * Spotify to grant app consent, user will
+     * be redirected back to the app.
      */
-    async playPause() {
-      const endpoint = this.player.playing
-        ? `${this.endpoints.base}/me/player/pause`
-        : `${this.endpoints.base}/me/player/play`;
-
-      try {
-        await fetch(endpoint, {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${this.auth.accessToken}`,
-          },
-        });
-        this.player.playing = !this.player.playing; // Update local state
-      } catch (error) {
-        console.error("Error toggling play/pause:", error);
-      }
+    initAuthorise() {
+      this.setAuthUrl()
+      window.location.href = `${this.endpoints.auth}?${searchParams.toString()}`
     },
 
     /**
-     * Skip to the next track.
+     * Check to see if the URL contains an auth code
+     * returned after the user grants consent from Spotify.
      */
-    async nextTrack() {
-      try {
-        await fetch(`${this.endpoints.base}/me/player/next`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${this.auth.accessToken}`,
-          },
-        });
-      } catch (error) {
-        console.error("Error skipping to the next track:", error);
-      }
-    },
+    getUrlAuthCode() {
+      const urlAuthCode = currentParams.get('code')
 
-    /**
-     * Skip to the previous track.
-     */
-    async previousTrack() {
-      try {
-        await fetch(`${this.endpoints.base}/me/player/previous`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${this.auth.accessToken}`,
-          },
-        });
-      } catch (error) {
-        console.error("Error skipping to the previous track:", error);
-      }
-    },
-
-    /**
-     * Make the network request to Spotify to
-     * get the current played track.
-     */
-    async getNowPlaying() {
-      let data = {}
-
-      try {
-        const response = await fetch(
-          `${this.endpoints.base}/${this.endpoints.nowPlaying}`,
-          {
-            headers: {
-              Authorization: `Bearer ${this.auth.accessToken}`
-            }
-          }
-        )
-
-        /**
-         * Fetch error.
-         */
-        if (!response.ok) {
-          throw new Error(`An error has occured: ${response.status}`)
-        }
-
-        /**
-         * Spotify returns a 204 when no current device session is found.
-         * The connection was successful but there's no content to return.
-         */
-        if (response.status === 204) {
-          data = this.getEmptyPlayer()
-          this.playerData = data
-
-          this.$nextTick(() => {
-            this.$emit('spotifyTrackUpdated', data)
-          })
-
-          return
-        }
-
-        data = await response.json()
-        this.playerResponse = data
-      } catch (error) {
-        this.handleExpiredToken()
-
-        data = this.getEmptyPlayer()
-        this.playerData = data
-
-        this.$nextTick(() => {
-          this.$emit('spotifyTrackUpdated', data)
-        })
-      }
-    },
-
-    /**
-     * Get the Now Playing element class.
-     * @return {String}
-     */
-    getNowPlayingClass() {
-      const playerClass = this.player.playing ? 'active' : 'idle'
-      return `now-playing--${playerClass}`
-    },
-
-    /**
-     * Get the colour palette from the album cover.
-     */
-    getAlbumColours() {
-      /**
-       * No image (rare).
-       */
-      if (!this.player.trackAlbum?.image) {
+      if (!urlAuthCode) {
         return
       }
 
-      /**
-       * Run node-vibrant to get colours.
-       */
-      Vibrant.from(this.player.trackAlbum.image)
-        .quality(1)
-        .clearFilters()
-        .getPalette()
-        .then(palette => {
-          this.handleAlbumPalette(palette)
-        })
+      this.auth.authCode = urlAuthCode
     },
 
     /**
-     * Return a formatted empty object for an idle player.
-     * @return {Object}
+     * Request the initial access and refresh tokens from Spotify.
      */
-    getEmptyPlayer() {
-      return {
-        playing: false,
-        trackAlbum: {},
-        trackArtists: [],
-        trackId: '',
-        trackTitle: ''
+    async requestAccessTokens(grantType = 'authorization_code') {
+      let fetchData = {
+        grant_type: grantType
       }
-    },
 
-    /**
-     * Poll Spotify for data.
-     */
-    setDataInterval() {
-      clearInterval(this.pollPlaying)
-      this.pollPlaying = setInterval(() => {
-        this.getNowPlaying()
-      }, 2500)
-    },
+      if (grantType === 'authorization_code') {
+        ;(fetchData.code = this.auth.authCode),
+          (fetchData.redirect_uri = window.location.origin)
+      }
 
-    /**
-     * Set the stylings of the app based on received colours.
-     */
-    setAppColours() {
-      document.documentElement.style.setProperty(
-        '--color-text-primary',
-        this.colourPalette.text
+      if (grantType === 'refresh_token') {
+        fetchData.refresh_token = this.auth.refreshToken
+      }
+
+      const queryBody = new URLSearchParams(fetchData).toString()
+
+      const clientDetails = btoa(
+        `${this.auth.clientId}:${this.auth.clientSecret}`
       )
 
-      document.documentElement.style.setProperty(
-        '--colour-background-now-playing',
-        this.colourPalette.background
-      )
-    },
-
-    /**
-     * Handle newly updated Spotify Tracks.
-     */
-    handleNowPlaying() {
-      if (
-        this.playerResponse.error?.status === 401 ||
-        this.playerResponse.error?.status === 400
-      ) {
-        this.handleExpiredToken()
-
-        return
-      }
-
-      /**
-       * Player is active, but user has paused.
-       */
-      if (this.playerResponse.is_playing === false) {
-        this.playerData = this.getEmptyPlayer()
-
-        return
-      }
-
-      /**
-       * The newly fetched track is the same as our stored
-       * one, we don't want to update the DOM yet.
-       */
-      if (this.playerResponse.item?.id === this.playerData.trackId) {
-        return
-      }
-
-      /**
-       * Store the current active track.
-       */
-      this.playerData = {
-        playing: this.playerResponse.is_playing,
-        trackArtists: this.playerResponse.item.artists.map(
-          artist => artist.name
-        ),
-        trackTitle: this.playerResponse.item.name,
-        trackId: this.playerResponse.item.id,
-        trackAlbum: {
-          title: this.playerResponse.item.album.name,
-          image: this.playerResponse.item.album.images[0].url
-        }
-      }
-    },
-
-    /**
-     * Handle newly stored colour palette:
-     * - Map data to readable format
-     * - Get and store random colour combination.
-     */
-    handleAlbumPalette(palette) {
-      let albumColours = Object.keys(palette)
-        .filter(item => {
-          return item === null ? null : item
-        })
-        .map(colour => {
-          return {
-            text: palette[colour].getTitleTextColor(),
-            background: palette[colour].getHex()
-          }
-        })
-
-      this.swatches = albumColours
-
-      this.colourPalette =
-        albumColours[Math.floor(Math.random() * albumColours.length)]
-
-      this.$nextTick(() => {
-        this.setAppColours()
+      const res = await fetch(`${this.endpoints.token}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Basic ${clientDetails}`
+        },
+        body: queryBody
       })
+
+      const data = await res.json()
+      const accessTokenResponse = data
+
+      this.handleAccessTokenResponse(accessTokenResponse)
     },
 
     /**
-     * Handle an expired access token from Spotify.
+     * Handle the data returned from Spotify.
+     * @param {Object} accessTokenResponse - response object from fetch.
      */
-    handleExpiredToken() {
-      clearInterval(this.pollPlaying)
-      this.$emit('requestRefreshToken')
-    },
+    handleAccessTokenResponse(accessTokenResponse = {}) {
+      /**
+       * Auth token expired.
+       */
+      if (accessTokenResponse.error?.error === 'invalid_grant') {
+        return
+      }
 
-    /**
-     * Spotify Player control: Start playback from a specific track or URI.
-     */
-    async startPlayback(uri) {
-      try {
-        const response = await fetch(`${this.endpoints.base}/me/player/play`, {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${this.auth.accessToken}`,
-          },
-          body: JSON.stringify({ uris: [uri] })
-        });
+      /**
+       * Access Token has expired.
+       */
+      if (accessTokenResponse.error?.status === 401) {
+        this.auth.authCode = ''
+        this.auth.status = false
 
-        if (!response.ok) {
-          throw new Error("Error starting playback");
+        return
+      }
+
+      /**
+       * Successful.
+       */
+      if (accessTokenResponse.access_token) {
+        this.auth.accessToken = accessTokenResponse.access_token
+
+        if (accessTokenResponse.refresh_token) {
+          this.auth.refreshToken = accessTokenResponse.refresh_token
         }
 
-        this.player.playing = true; // Update state
-        this.getNowPlaying(); // Fetch updated track data
-      } catch (error) {
-        console.error("Error starting playback:", error);
+        this.auth.status = true
+
+        /**
+         * There has to be a better way than this.
+         */
+        const param = param != 'undefined' ? param : ''
+        window.history.replaceState(
+          null,
+          null,
+          location.protocol +
+            '//' +
+            location.host +
+            location.pathname +
+            location.search
+              .replace(/[?&]code=[^&]+/, '')
+              .replace(/^&/, '?')
+              .replace(/[?&]state=[^&]+/, '')
+              .replace(/^&/, '?')
+        )
       }
     },
 
     /**
-     * Search Spotify for a track and start playback.
+     * Set the initial Spotify authorisation URL
+     * in which the user will be redirected to.
      */
-    async searchAndPlay(trackName) {
-      try {
-        const searchResponse = await fetch(
-          `${this.endpoints.base}/v1/search?type=track&q=${encodeURIComponent(trackName)}`,
-          {
-            headers: {
-              Authorization: `Bearer ${this.auth.accessToken}`,
-            },
-          }
-        );
+    setAuthUrl() {
+      searchParams.toString()
+      searchParams.append('client_id', this.auth.clientId)
+      searchParams.append('response_type', 'code')
+      searchParams.append('redirect_uri', window.location.origin)
+      searchParams.append(
+        'state',
+        [
+          Math.random()
+            .toString(33)
+            .substring(2),
+          Math.random()
+            .toString(34)
+            .substring(3),
+          Math.random()
+            .toString(35)
+            .substring(4),
+          Math.random()
+            .toString(36)
+            .substring(5)
+        ].join('-')
+      )
+      searchParams.append('scope', 'user-read-currently-playing user-read-playback-position user-modify-playback-state')
 
-        const searchData = await searchResponse.json();
+      return `${this.endpoints.auth}?${searchParams.toString()}`
+    }
+  },
 
-        if (searchData.tracks.items.length > 0) {
-          const trackUri = searchData.tracks.items[0].uri;
-          await this.startPlayback(trackUri);
-        } else {
-          console.error("No track found for search:", trackName);
-        }
-      } catch (error) {
-        console.error("Error searching for track:", error);
+  watch: {
+    /**
+     * Watch authorisation code.
+     */
+    'auth.authCode': function() {
+      this.requestAccessTokens()
+    },
+
+    /**
+     * Watch authorisation status.
+     */
+    'auth.status': function() {
+      if (this.auth.refreshToken) {
+        this.requestAccessTokens('refresh_token')
       }
     }
   }

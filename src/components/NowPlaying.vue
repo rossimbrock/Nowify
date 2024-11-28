@@ -20,12 +20,11 @@
     <div v-else class="now-playing" :class="getNowPlayingClass()">
       <h1 class="now-playing__idle-heading">No music is playing 😔</h1>
     </div>
-    <!-- Playback Controls -->
-    <div id="controls" v-if="player.playing">
-      <button @click="playPause">
-        {{ player.playing ? "Pause" : "Play" }}
-      </button>
+
+    <!-- Controls Section -->
+    <div class="controls">
       <button @click="previousTrack">Previous</button>
+      <button @click="togglePlayPause">{{ player.playing ? 'Pause' : 'Play' }}</button>
       <button @click="nextTrack">Next</button>
     </div>
   </div>
@@ -56,10 +55,6 @@ export default {
   },
 
   computed: {
-    /**
-     * Return a comma-separated list of track artists.
-     * @return {String}
-     */
     getTrackArtists() {
       return this.player.trackArtists.join(', ')
     }
@@ -74,66 +69,8 @@ export default {
   },
 
   methods: {
-    /**
-     * Play or pause the current track.
-     */
-    async playPause() {
-      const endpoint = this.player.playing
-        ? `${this.endpoints.base}/me/player/pause`
-        : `${this.endpoints.base}/me/player/play`;
-
-      try {
-        await fetch(endpoint, {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${this.auth.accessToken}`,
-          },
-        });
-        this.player.playing = !this.player.playing; // Update local state
-      } catch (error) {
-        console.error("Error toggling play/pause:", error);
-      }
-    },
-
-    /**
-     * Skip to the next track.
-     */
-    async nextTrack() {
-      try {
-        await fetch(`${this.endpoints.base}/me/player/next`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${this.auth.accessToken}`,
-          },
-        });
-      } catch (error) {
-        console.error("Error skipping to the next track:", error);
-      }
-    },
-
-    /**
-     * Skip to the previous track.
-     */
-    async previousTrack() {
-      try {
-        await fetch(`${this.endpoints.base}/me/player/previous`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${this.auth.accessToken}`,
-          },
-        });
-      } catch (error) {
-        console.error("Error skipping to the previous track:", error);
-      }
-    },
-
-    /**
-     * Make the network request to Spotify to
-     * get the current played track.
-     */
     async getNowPlaying() {
       let data = {}
-
       try {
         const response = await fetch(
           `${this.endpoints.base}/${this.endpoints.nowPlaying}`,
@@ -143,66 +80,39 @@ export default {
             }
           }
         )
-
-        /**
-         * Fetch error.
-         */
         if (!response.ok) {
-          throw new Error(`An error has occured: ${response.status}`)
+          throw new Error(`An error has occurred: ${response.status}`)
         }
-
-        /**
-         * Spotify returns a 204 when no current device session is found.
-         * The connection was successful but there's no content to return.
-         */
         if (response.status === 204) {
           data = this.getEmptyPlayer()
           this.playerData = data
-
           this.$nextTick(() => {
             this.$emit('spotifyTrackUpdated', data)
           })
-
           return
         }
-
         data = await response.json()
         this.playerResponse = data
       } catch (error) {
         this.handleExpiredToken()
-
         data = this.getEmptyPlayer()
         this.playerData = data
-
         this.$nextTick(() => {
           this.$emit('spotifyTrackUpdated', data)
         })
       }
     },
 
-    /**
-     * Get the Now Playing element class.
-     * @return {String}
-     */
     getNowPlayingClass() {
       const playerClass = this.player.playing ? 'active' : 'idle'
       return `now-playing--${playerClass}`
     },
 
-    /**
-     * Get the colour palette from the album cover.
-     */
     getAlbumColours() {
-      /**
-       * No image (rare).
-       */
       if (!this.player.trackAlbum?.image) {
         return
       }
 
-      /**
-       * Run node-vibrant to get colours.
-       */
       Vibrant.from(this.player.trackAlbum.image)
         .quality(1)
         .clearFilters()
@@ -212,10 +122,6 @@ export default {
         })
     },
 
-    /**
-     * Return a formatted empty object for an idle player.
-     * @return {Object}
-     */
     getEmptyPlayer() {
       return {
         playing: false,
@@ -226,9 +132,6 @@ export default {
       }
     },
 
-    /**
-     * Poll Spotify for data.
-     */
     setDataInterval() {
       clearInterval(this.pollPlaying)
       this.pollPlaying = setInterval(() => {
@@ -236,9 +139,6 @@ export default {
       }, 2500)
     },
 
-    /**
-     * Set the stylings of the app based on received colours.
-     */
     setAppColours() {
       document.documentElement.style.setProperty(
         '--color-text-primary',
@@ -251,39 +151,21 @@ export default {
       )
     },
 
-    /**
-     * Handle newly updated Spotify Tracks.
-     */
     handleNowPlaying() {
       if (
         this.playerResponse.error?.status === 401 ||
         this.playerResponse.error?.status === 400
       ) {
         this.handleExpiredToken()
-
         return
       }
-
-      /**
-       * Player is active, but user has paused.
-       */
       if (this.playerResponse.is_playing === false) {
         this.playerData = this.getEmptyPlayer()
-
         return
       }
-
-      /**
-       * The newly fetched track is the same as our stored
-       * one, we don't want to update the DOM yet.
-       */
       if (this.playerResponse.item?.id === this.playerData.trackId) {
         return
       }
-
-      /**
-       * Store the current active track.
-       */
       this.playerData = {
         playing: this.playerResponse.is_playing,
         trackArtists: this.playerResponse.item.artists.map(
@@ -298,64 +180,91 @@ export default {
       }
     },
 
-    /**
-     * Handle newly stored colour palette:
-     * - Map data to readable format
-     * - Get and store random colour combination.
-     */
     handleAlbumPalette(palette) {
       let albumColours = Object.keys(palette)
-        .filter(item => {
-          return item === null ? null : item
-        })
-        .map(colour => {
-          return {
-            text: palette[colour].getTitleTextColor(),
-            background: palette[colour].getHex()
-          }
-        })
+        .filter(item => item === null ? null : item)
+        .map(colour => ({
+          text: palette[colour].getTitleTextColor(),
+          background: palette[colour].getHex()
+        }))
 
       this.swatches = albumColours
-
-      this.colourPalette =
-        albumColours[Math.floor(Math.random() * albumColours.length)]
+      this.colourPalette = albumColours[Math.floor(Math.random() * albumColours.length)]
 
       this.$nextTick(() => {
         this.setAppColours()
       })
     },
 
-    /**
-     * Handle an expired access token from Spotify.
-     */
     handleExpiredToken() {
       clearInterval(this.pollPlaying)
       this.$emit('requestRefreshToken')
+    },
+
+    // New Methods for Play/Pause, Next and Previous track
+    async togglePlayPause() {
+      try {
+        const response = await fetch(`${this.endpoints.base}/v1/me/player/play`, {
+          method: this.player.playing ? 'PUT' : 'POST',
+          headers: {
+            Authorization: `Bearer ${this.auth.accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        if (!response.ok) {
+          throw new Error('Error toggling play/pause')
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    },
+
+    async nextTrack() {
+      try {
+        const response = await fetch(`${this.endpoints.base}/v1/me/player/next`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${this.auth.accessToken}`
+          }
+        })
+        if (!response.ok) {
+          throw new Error('Error skipping to the next track')
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    },
+
+    async previousTrack() {
+      try {
+        const response = await fetch(`${this.endpoints.base}/v1/me/player/previous`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${this.auth.accessToken}`
+          }
+        })
+        if (!response.ok) {
+          throw new Error('Error going to the previous track')
+        }
+      } catch (error) {
+        console.error(error)
+      }
     }
   },
+
   watch: {
-    /**
-     * Watch the auth object returned from Spotify.
-     */
     auth: function(oldVal, newVal) {
       if (newVal.status === false) {
         clearInterval(this.pollPlaying)
       }
     },
 
-    /**
-     * Watch the returned track object.
-     */
     playerResponse: function() {
       this.handleNowPlaying()
     },
 
-    /**
-     * Watch our locally stored track data.
-     */
     playerData: function() {
       this.$emit('spotifyTrackUpdated', this.playerData)
-
       this.$nextTick(() => {
         this.getAlbumColours()
       })
