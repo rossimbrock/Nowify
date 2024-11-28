@@ -20,6 +20,14 @@
     <div v-else class="now-playing" :class="getNowPlayingClass()">
       <h1 class="now-playing__idle-heading">No music is playing 😔</h1>
     </div>
+    <!-- Playback Controls -->
+    <div id="controls" v-if="player.playing">
+      <button @click="playPause">
+        {{ player.playing ? "Pause" : "Play" }}
+      </button>
+      <button @click="previousTrack">Previous</button>
+      <button @click="nextTrack">Next</button>
+    </div>
   </div>
 </template>
 
@@ -66,6 +74,59 @@ export default {
   },
 
   methods: {
+    /**
+     * Play or pause the current track.
+     */
+    async playPause() {
+      const endpoint = this.player.playing
+        ? `${this.endpoints.base}/me/player/pause`
+        : `${this.endpoints.base}/me/player/play`;
+
+      try {
+        await fetch(endpoint, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${this.auth.accessToken}`,
+          },
+        });
+        this.player.playing = !this.player.playing; // Update local state
+      } catch (error) {
+        console.error("Error toggling play/pause:", error);
+      }
+    },
+
+    /**
+     * Skip to the next track.
+     */
+    async nextTrack() {
+      try {
+        await fetch(`${this.endpoints.base}/me/player/next`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${this.auth.accessToken}`,
+          },
+        });
+      } catch (error) {
+        console.error("Error skipping to the next track:", error);
+      }
+    },
+
+    /**
+     * Skip to the previous track.
+     */
+    async previousTrack() {
+      try {
+        await fetch(`${this.endpoints.base}/me/player/previous`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${this.auth.accessToken}`,
+          },
+        });
+      } catch (error) {
+        console.error("Error skipping to the previous track:", error);
+      }
+    },
+
     /**
      * Make the network request to Spotify to
      * get the current played track.
