@@ -199,48 +199,55 @@ export default {
     },
 
     // New Methods for Play/Pause, Next and Previous track
-  async togglePlayPause() {
-    try {
-      // Get the current playback state (whether it's playing or paused)
-      const playbackStateResponse = await fetch(`${this.endpoints.base}/me/player`, {
-        method: 'GET',
+    async togglePlayPause() {
+  try {
+    // Get the current playback state (whether it's playing or paused)
+    const playbackStateResponse = await fetch(`${this.endpoints.base}/me/player`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${this.auth.accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!playbackStateResponse.ok) {
+      throw new Error('Error fetching playback state');
+    }
+
+    const playbackState = await playbackStateResponse.json();
+
+    // If no active device or no playback state, or if it's not playing, start playing
+    if (!playbackState || !playbackState.is_playing) {
+      // POST to start playback if nothing is playing
+      const playResponse = await fetch(`${this.endpoints.base}/me/player/play`, {
+        method: 'PUT', // Use PUT for play (should be PUT, not POST)
         headers: {
           Authorization: `Bearer ${this.auth.accessToken}`,
           'Content-Type': 'application/json'
         }
       });
 
-      // If there's an error or no playback state, log it and return early
-      if (!playbackStateResponse.ok) {
-        throw new Error('Error fetching playback state');
+      if (!playResponse.ok) {
+        throw new Error('Error playing the track');
       }
+    } else {
+      // PUT to pause the track if it is currently playing
+      const pauseResponse = await fetch(`${this.endpoints.base}/me/player/pause`, {
+        method: 'PUT', // Use PUT to pause
+        headers: {
+          Authorization: `Bearer ${this.auth.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      const playbackState = await playbackStateResponse.json();
-
-      // If there's no active device or playback state is not found
-      if (!playbackState || !playbackState.is_playing) {
-        // If nothing is playing, start playing (POST request)
-        await fetch(`${this.endpoints.base}/${this.endpoints.play}`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${this.auth.accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
-      } else {
-        // If the player is already playing, pause it (PUT request)
-        await fetch(`${this.endpoints.base}/${this.endpoints.pause}`, {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${this.auth.accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
+      if (!pauseResponse.ok) {
+        throw new Error('Error pausing the track');
       }
-    } catch (error) {
-      console.error(error);
     }
-  },
+  } catch (error) {
+    console.error(error);
+  }
+},
 
     async nextTrack() {
       try {
