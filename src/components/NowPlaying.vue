@@ -9,7 +9,6 @@
           <img
             :src="player.trackAlbum.image"
             :alt="player.trackTitle"
-            class="now-playing__image"
           />
         </div>
         
