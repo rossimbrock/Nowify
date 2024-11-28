@@ -199,7 +199,7 @@ export default {
     },
 
     // New Methods for Play/Pause, Next and Previous track
-    async togglePlayPause() {
+  async togglePlayPause() {
   try {
     // Get the current playback state (whether it's playing or paused)
     const playbackStateResponse = await fetch(`${this.endpoints.base}/me/player`, {
@@ -230,6 +230,9 @@ export default {
       if (!playResponse.ok) {
         throw new Error('Error playing the track');
       }
+
+      // Manually update the player state after successfully starting the track
+      this.player.playing = true;
     } else {
       // PUT to pause the track if it is currently playing
       const pauseResponse = await fetch(`${this.endpoints.base}/me/player/pause`, {
@@ -243,6 +246,9 @@ export default {
       if (!pauseResponse.ok) {
         throw new Error('Error pausing the track');
       }
+
+      // Manually update the player state after successfully pausing the track
+      this.player.playing = false;
     }
   } catch (error) {
     console.error(error);
