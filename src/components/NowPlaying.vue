@@ -152,25 +152,22 @@ export default {
     },
 
     handleNowPlaying() {
-      if (
-        this.playerResponse.error?.status === 401 ||
-        this.playerResponse.error?.status === 400
-      ) {
+      if (this.playerResponse.error?.status === 401 || this.playerResponse.error?.status === 400) {
         this.handleExpiredToken()
         return
       }
       if (this.playerResponse.is_playing === false) {
-        this.playerData = this.getEmptyPlayer()
+        // Do not clear the track data, just ensure it remains as is
         return
       }
       if (this.playerResponse.item?.id === this.playerData.trackId) {
+        // Track hasn't changed, so do nothing
         return
       }
+      // If the track changes, update the data
       this.playerData = {
         playing: this.playerResponse.is_playing,
-        trackArtists: this.playerResponse.item.artists.map(
-          artist => artist.name
-        ),
+        trackArtists: this.playerResponse.item.artists.map(artist => artist.name),
         trackTitle: this.playerResponse.item.name,
         trackId: this.playerResponse.item.id,
         trackAlbum: {
