@@ -2,7 +2,6 @@
   background-color: var(--colour-background-now-playing);
   color: var(--color-text-primary);
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100%;
@@ -10,54 +9,57 @@
   width: 100%;
   position: relative;
 
+  &__content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: 1000px; /* Ensures the content doesn't stretch too wide */
+    width: 100%;
+    flex-direction: row;
+    gap: var(--spacing-m); /* Adds space between image and text + controls */
+  }
+
   &__cover {
     display: flex;
     justify-content: center;
     align-items: center;
     padding: var(--spacing-m);
     text-align: center;
-    width: 100%;
   }
 
   &__image {
     box-shadow: 1px 1px 16px -2px rgba(0, 0, 0, .3);
     height: auto;
-    max-width: 60vw;
+    width: 250px; /* Make the image larger */
+  }
+
+  &__right {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    align-items: center;
     width: 100%;
   }
 
   &__details {
-    display: flex;
-    flex-direction: column; /* Stack title and artist vertically */
-    justify-content: center;
-    text-align: center;
-    width: 100%;
-    padding: var(--spacing-m);
-    margin-top: var(--spacing-m); /* Space between the image and text */
+    margin-bottom: var(--spacing-m); /* Space between details and controls */
   }
 
   &__track {
     font-weight: var(--font-weight-heading);
+    margin: 0;
   }
 
   &__artists {
     opacity: 0.8;
-  }
-
-  &--active,
-  &--paused,
-  &--idle {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    margin: 0;
   }
 
   .controls {
     display: flex;
     justify-content: center;
     gap: 20px; /* Space between buttons */
-    margin-top: var(--spacing-m); /* Add some space between the text and the controls */
   }
 
   .control-button {
@@ -84,30 +86,32 @@
     }
 
     &.prev {
-      background-color: #000000; /* Blue for previous */
+      background-color: #007bff; /* Blue for previous */
     }
 
     &.play-pause {
-      background-color: #000000; /* Green for play/pause */
+      background-color: #28a745; /* Green for play/pause */
     }
 
     &.next {
-      background-color: #000000; /* Yellow for next */
+      background-color: #ffc107; /* Yellow for next */
     }
   }
 
   @media only screen and (min-width: 767px) {
     padding: 10%;
     width: 100%;
+    &__content {
+      flex-direction: row;
+      gap: var(--spacing-l); /* Increase space between image and text + controls */
+    }
 
-    &__cover,
-    &__details {
-      width: 100%;
-      max-width: 495px;
+    &__image {
+      width: 300px; /* Make the image a little bigger on larger screens */
     }
 
     &__details {
-      text-align: center;
+      text-align: left;
     }
   }
 }

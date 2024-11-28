@@ -1,35 +1,39 @@
 <template>
   <div id="app">
     <div class="now-playing" :class="getNowPlayingClass()">
-      <!-- Album Cover -->
-      <div v-if="player.trackTitle" class="now-playing__cover">
-        <img
-          :src="player.trackAlbum.image"
-          :alt="player.trackTitle"
-          class="now-playing__image"
-        />
-      </div>
-      
-      <!-- Song Title and Artist -->
-      <div v-if="player.trackTitle" class="now-playing__details">
-        <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
-        <h2 class="now-playing__artists" v-text="getTrackArtists"></h2>
-      </div>
-      <div v-else class="now-playing__idle-heading">
-        No music is playing 😔
-      </div>
-      
-      <!-- Control Buttons (Play/Pause, Previous, Next) -->
-      <div class="controls">
-        <button @click="previousTrack" class="control-button prev">
-          <i class="fas fa-backward"></i>
-        </button>
-        <button @click="togglePlayPause" class="control-button play-pause">
-          <i :class="player.playing ? 'fas fa-pause' : 'fas fa-play'"></i>
-        </button>
-        <button @click="nextTrack" class="control-button next">
-          <i class="fas fa-forward"></i>
-        </button>
+      <!-- Main Container for Image and Right Section -->
+      <div class="now-playing__content">
+        
+        <!-- Album Cover on Left -->
+        <div v-if="player.trackTitle" class="now-playing__cover">
+          <img
+            :src="player.trackAlbum.image"
+            :alt="player.trackTitle"
+            class="now-playing__image"
+          />
+        </div>
+        
+        <!-- Song Details and Controls on Right -->
+        <div class="now-playing__right">
+          <!-- Song Title and Artist Name -->
+          <div class="now-playing__details">
+            <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
+            <h2 class="now-playing__artists" v-text="getTrackArtists"></h2>
+          </div>
+
+          <!-- Control Buttons (Play/Pause, Previous, Next) -->
+          <div class="controls">
+            <button @click="previousTrack" class="control-button prev">
+              <i class="fas fa-backward"></i>
+            </button>
+            <button @click="togglePlayPause" class="control-button play-pause">
+              <i :class="player.playing ? 'fas fa-pause' : 'fas fa-play'"></i>
+            </button>
+            <button @click="nextTrack" class="control-button next">
+              <i class="fas fa-forward"></i>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
