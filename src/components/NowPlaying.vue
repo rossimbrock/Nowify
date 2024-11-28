@@ -18,9 +18,15 @@
     </div>
     <!-- Controls Section -->
     <div class="controls">
-      <button @click="previousTrack">Previous</button>
-      <button @click="togglePlayPause">{{ player.playing ? 'Pause' : 'Play' }}</button>
-      <button @click="nextTrack">Next</button>
+      <button @click="previousTrack" class="control-button">
+        <i class="fas fa-backward"></i>
+      </button>
+      <button @click="togglePlayPause" class="control-button">
+        <i :class="player.playing ? 'fas fa-pause' : 'fas fa-play'"></i>
+      </button>
+      <button @click="nextTrack" class="control-button">
+        <i class="fas fa-forward"></i>
+      </button>
     </div>
   </div>
 </template>
