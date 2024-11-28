@@ -6,7 +6,7 @@
   height: 100%;
   padding: var(--spacing-l);
   width: 100%;
-  position: relative; /* Keep this for the absolute positioning of the buttons */
+  position: relative;
 
   &__cover {
     display: flex;
@@ -27,12 +27,12 @@
 
   &__details {
     display: flex;
-    flex-direction: column; /* Stacking title and artist vertically */
+    flex-direction: column; /* Stack title and artist vertically */
     justify-content: center;
     text-align: center;
     width: 100%;
     padding: var(--spacing-m);
-    margin-top: var(--spacing-m); /* Add some space between the image and text */
+    margin-top: var(--spacing-m); /* Space between the image and text */
   }
 
   &__track {
@@ -53,13 +53,10 @@
   }
 
   .controls {
-    position: absolute;
-    top: 70%; /* Position the controls below the title/artist */
-    left: 50%;
-    transform: translateX(-50%); /* Center the controls */
     display: flex;
     justify-content: center;
     gap: 20px; /* Space between buttons */
+    margin-top: var(--spacing-m); /* Add some space between the text and the controls */
   }
 
   .control-button {
@@ -78,7 +75,7 @@
 
     &:hover {
       background-color: var(--color-text-primary-hover);
-      transform: scale(1.1); /* Slightly enlarge the button on hover */
+      transform: scale(1.1);
     }
 
     i {
@@ -86,15 +83,15 @@
     }
 
     &.prev {
-      background-color: #000000; /* Blue for previous */
+      background-color: #007bff; /* Blue for previous */
     }
 
     &.play-pause {
-      background-color: #000000; /* Green for play/pause */
+      background-color: #28a745; /* Green for play/pause */
     }
 
     &.next {
-      background-color: #000000; /* Yellow for next */
+      background-color: #ffc107; /* Yellow for next */
     }
   }
 

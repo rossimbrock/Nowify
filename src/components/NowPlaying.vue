@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <div class="now-playing" :class="getNowPlayingClass()">
+      <!-- Album Cover -->
       <div v-if="player.trackTitle" class="now-playing__cover">
         <img
           :src="player.trackAlbum.image"
@@ -8,6 +9,8 @@
           class="now-playing__image"
         />
       </div>
+      
+      <!-- Song Title and Artist -->
       <div v-if="player.trackTitle" class="now-playing__details">
         <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
         <h2 class="now-playing__artists" v-text="getTrackArtists"></h2>
@@ -15,7 +18,8 @@
       <div v-else class="now-playing__idle-heading">
         No music is playing 😔
       </div>
-      <!-- Controls Section -->
+      
+      <!-- Control Buttons (Play/Pause, Previous, Next) -->
       <div class="controls">
         <button @click="previousTrack" class="control-button prev">
           <i class="fas fa-backward"></i>
