@@ -199,7 +199,7 @@ export default {
             .substring(5)
         ].join('-')
       )
-      searchParams.append('scope', 'user-read-currently-playing user-read-playback-position user-modify-playback-state')
+      searchParams.append('scope', 'user-read-currently-playing user-read-playback-position user-modify-playback-state user-read-playback-state')
 
       return `${this.endpoints.auth}?${searchParams.toString()}`
     }
