@@ -1,24 +1,20 @@
 <template>
   <div id="app">
-    <div
-      v-if="player.playing"
-      class="now-playing"
-      :class="getNowPlayingClass()"
-    >
-      <div class="now-playing__cover">
+    <div class="now-playing" :class="getNowPlayingClass()">
+      <div v-if="player.trackTitle" class="now-playing__cover">
         <img
           :src="player.trackAlbum.image"
           :alt="player.trackTitle"
           class="now-playing__image"
         />
       </div>
-      <div class="now-playing__details">
+      <div v-if="player.trackTitle" class="now-playing__details">
         <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
         <h2 class="now-playing__artists" v-text="getTrackArtists"></h2>
       </div>
-    </div>
-    <div v-else class="now-playing" :class="getNowPlayingClass()">
-      <h1 class="now-playing__idle-heading">No music is playing 😔</h1>
+      <div v-else class="now-playing__idle-heading">
+        No music is playing 😔
+      </div>
     </div>
 
     <!-- Controls Section -->
@@ -104,7 +100,7 @@ export default {
     },
 
     getNowPlayingClass() {
-      const playerClass = this.player.playing ? 'active' : 'idle'
+      const playerClass = this.player.trackTitle ? (this.player.playing ? 'active' : 'paused') : 'idle'
       return `now-playing--${playerClass}`
     },
 
@@ -198,62 +194,58 @@ export default {
       this.$emit('requestRefreshToken')
     },
 
-    // New Methods for Play/Pause, Next and Previous track
-  async togglePlayPause() {
-  try {
-    // Get the current playback state (whether it's playing or paused)
-    const playbackStateResponse = await fetch(`${this.endpoints.base}/me/player`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${this.auth.accessToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    async togglePlayPause() {
+      try {
+        // Get the current playback state (whether it's playing or paused)
+        const playbackStateResponse = await fetch(`${this.endpoints.base}/me/player`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${this.auth.accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-    if (!playbackStateResponse.ok) {
-      throw new Error('Error fetching playback state');
-    }
-
-    const playbackState = await playbackStateResponse.json();
-
-    // If no active device or no playback state, or if it's not playing, start playing
-    if (!playbackState || !playbackState.is_playing) {
-      // POST to start playback if nothing is playing
-      const playResponse = await fetch(`${this.endpoints.base}/me/player/play`, {
-        method: 'PUT', // Use PUT for play (should be PUT, not POST)
-        headers: {
-          Authorization: `Bearer ${this.auth.accessToken}`,
-          'Content-Type': 'application/json'
+        if (!playbackStateResponse.ok) {
+          throw new Error('Error fetching playback state');
         }
-      });
 
-      if (!playResponse.ok) {
-        throw new Error('Error playing the track');
-      }
+        const playbackState = await playbackStateResponse.json();
 
-      // Manually update the player state after successfully starting the track
-      this.player.playing = true;
-    } else {
-      // PUT to pause the track if it is currently playing
-      const pauseResponse = await fetch(`${this.endpoints.base}/me/player/pause`, {
-        method: 'PUT', // Use PUT to pause
-        headers: {
-          Authorization: `Bearer ${this.auth.accessToken}`,
-          'Content-Type': 'application/json'
+        if (!playbackState || !playbackState.is_playing) {
+          // POST to start playback if nothing is playing
+          const playResponse = await fetch(`${this.endpoints.base}/me/player/play`, {
+            method: 'PUT', // Use PUT for play (should be PUT, not POST)
+            headers: {
+              Authorization: `Bearer ${this.auth.accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (!playResponse.ok) {
+            throw new Error('Error playing the track');
+          }
+
+          this.player.playing = true;
+        } else {
+          // PUT to pause the track if it is currently playing
+          const pauseResponse = await fetch(`${this.endpoints.base}/me/player/pause`, {
+            method: 'PUT', // Use PUT to pause
+            headers: {
+              Authorization: `Bearer ${this.auth.accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (!pauseResponse.ok) {
+            throw new Error('Error pausing the track');
+          }
+
+          this.player.playing = false;
         }
-      });
-
-      if (!pauseResponse.ok) {
-        throw new Error('Error pausing the track');
+      } catch (error) {
+        console.error(error);
       }
-
-      // Manually update the player state after successfully pausing the track
-      this.player.playing = false;
-    }
-  } catch (error) {
-    console.error(error);
-  }
-},
+    },
 
     async nextTrack() {
       try {
