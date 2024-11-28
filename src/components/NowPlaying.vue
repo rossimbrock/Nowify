@@ -1,23 +1,21 @@
 <template>
   <div id="app">
-    <div
-      :class="['now-playing', getNowPlayingClass()]"
-      class="now-playing"
-    >
-      <div v-if="player.playing || player.trackId" class="now-playing__cover">
+    <div class="now-playing" :class="getNowPlayingClass()">
+      <div v-if="player.trackTitle" class="now-playing__cover">
         <img
-          v-if="player.trackAlbum?.image"
           :src="player.trackAlbum.image"
           :alt="player.trackTitle"
           class="now-playing__image"
         />
       </div>
-      <div class="now-playing__details">
-        <h1 class="now-playing__track" v-text="player.trackTitle || 'No music playing'"></h1>
-        <h2 class="now-playing__artists" v-text="getTrackArtists || ''"></h2>
+      <div v-if="player.trackTitle" class="now-playing__details">
+        <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
+        <h2 class="now-playing__artists" v-text="getTrackArtists"></h2>
+      </div>
+      <div v-else class="now-playing__idle-heading">
+        No music is playing 😔
       </div>
     </div>
-
     <!-- Controls Section -->
     <div class="controls">
       <button @click="previousTrack">Previous</button>
