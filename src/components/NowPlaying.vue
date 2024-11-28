@@ -9,7 +9,7 @@
           class="now-playing__image"
         />
       </div>
-      <br>
+      
       <!-- Song Title and Artist -->
       <div v-if="player.trackTitle" class="now-playing__details">
         <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
@@ -18,7 +18,7 @@
       <div v-else class="now-playing__idle-heading">
         No music is playing 😔
       </div>
-      <br>
+      
       <!-- Control Buttons (Play/Pause, Previous, Next) -->
       <div class="controls">
         <button @click="previousTrack" class="control-button prev">
