@@ -10,7 +10,6 @@
             :src="player.trackAlbum.image"
             :alt="player.trackTitle"
             class="now-playing__image"
-            :style="{ backgroundColor: colourPalette ? colourPalette.vibrant : '' }"
           />
         </div>
         
@@ -20,20 +19,6 @@
           <div class="now-playing__details">
             <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
             <h2 class="now-playing__artists" v-text="getTrackArtists"></h2>
-          </div>
-
-          <!-- Progress Bar -->
-          <div class="progress-bar">
-            <span class="time-left">{{ formatTime(player.currentTime) }}</span>
-            <input
-              type="range"
-              class="progress"
-              :min="0"
-              :max="player.trackDuration"
-              :value="player.currentTime"
-              @input="seekTrack($event)"
-            />
-            <span class="time-right">{{ formatTime(player.trackDuration) }}</span>
           </div>
 
           <!-- Control Buttons (Play/Pause, Previous, Next) -->
@@ -56,6 +41,7 @@
 
 <script>
 import * as Vibrant from 'node-vibrant'
+
 import props from '@/utils/props.js'
 
 export default {
@@ -73,9 +59,7 @@ export default {
       playerResponse: {},
       playerData: this.getEmptyPlayer(),
       colourPalette: '',
-      swatches: [],
-      currentTime: 0,  // Current time in seconds
-      trackDuration: 0  // Track duration in seconds
+      swatches: []
     }
   },
 
@@ -156,66 +140,11 @@ export default {
         trackTitle: ''
       }
     },
-    formatTime(seconds) {
-      const minutes = Math.floor(seconds / 60)
-      const secs = Math.floor(seconds % 60)
-      return `${minutes}:${secs < 10 ? '0' : ''}${secs}`
-    },
-
-    async updateProgress() {
-      try {
-        const playbackStateResponse = await fetch(`${this.endpoints.base}/me/player`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${this.auth.accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!playbackStateResponse.ok) {
-          throw new Error('Error fetching playback state');
-        }
-
-        const playbackState = await playbackStateResponse.json();
-
-        if (playbackState && playbackState.is_playing) {
-          this.currentTime = playbackState.progress_ms / 1000;  // Convert ms to seconds
-          this.trackDuration = playbackState.item.duration_ms / 1000;  // Convert ms to seconds
-        }
-      } catch (error) {
-        console.error('Error fetching progress:', error);
-      }
-    },
-
-    seekTrack(event) {
-      const newTime = event.target.value;
-      this.currentTime = newTime;
-      this.updateTrackPosition(newTime);
-    },
-
-    async updateTrackPosition(newTime) {
-      try {
-        const response = await fetch(`${this.endpoints.base}/me/player/seek`, {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${this.auth.accessToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ position_ms: newTime * 1000 })  // Convert seconds to ms
-        });
-        if (!response.ok) {
-          throw new Error('Error seeking track');
-        }
-      } catch (error) {
-        console.error('Error seeking track:', error);
-      }
-    },
 
     setDataInterval() {
       clearInterval(this.pollPlaying)
       this.pollPlaying = setInterval(() => {
         this.getNowPlaying()
-        this.updateProgress()  // Update the progress bar
       }, 2500)
     },
 
@@ -280,6 +209,7 @@ export default {
 
     async togglePlayPause() {
       try {
+        // Get the current playback state (whether it's playing or paused)
         const playbackStateResponse = await fetch(`${this.endpoints.base}/me/player`, {
           method: 'GET',
           headers: {
@@ -295,8 +225,9 @@ export default {
         const playbackState = await playbackStateResponse.json();
 
         if (!playbackState || !playbackState.is_playing) {
+          // POST to start playback if nothing is playing
           const playResponse = await fetch(`${this.endpoints.base}/me/player/play`, {
-            method: 'PUT',
+            method: 'PUT', // Use PUT for play (should be PUT, not POST)
             headers: {
               Authorization: `Bearer ${this.auth.accessToken}`,
               'Content-Type': 'application/json'
@@ -309,8 +240,9 @@ export default {
 
           this.player.playing = true;
         } else {
+          // PUT to pause the track if it is currently playing
           const pauseResponse = await fetch(`${this.endpoints.base}/me/player/pause`, {
-            method: 'PUT',
+            method: 'PUT', // Use PUT to pause
             headers: {
               Authorization: `Bearer ${this.auth.accessToken}`,
               'Content-Type': 'application/json'
