@@ -252,7 +252,9 @@ export default {
             .substring(5)
         ].join('-')
       )
-      searchParams.append('scope', 'user-read-currently-playing,user-read-playback-position,user-modify-playback-state')
+      searchParams.append('scope', 'user-read-currently-playing')
+      searchParams.append('scope', 'user-read-playback-position')
+      searchParams.append('scope', 'user-modify-playback-state')
       searchParams.append('code_challenge', this.codeChallenge)
       searchParams.append('code_challenge_method', 'S256') // Use SHA-256 for PKCE
 
