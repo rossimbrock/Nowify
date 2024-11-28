@@ -48,6 +48,11 @@
     justify-content: center;
   }
 
+  &--paused {
+    align-items: center;
+    justify-content: center;
+  }
+
   &--idle {
     display: flex;
     align-items: center;
