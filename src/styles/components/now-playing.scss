@@ -9,7 +9,7 @@
   position: relative; /* Keep this for the absolute positioning of the buttons */
 
   &__cover {
-    display: flex; /* Added flex display */
+    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -26,12 +26,13 @@
   }
 
   &__details {
-    display: flex; /* Use flexbox to position title and artist horizontally */
-    flex-direction: column; /* Ensure title and artist are stacked in smaller screens */
+    display: flex;
+    flex-direction: column; /* Stacking title and artist vertically */
     justify-content: center;
     text-align: center;
     width: 100%;
     padding: var(--spacing-m);
+    margin-top: var(--spacing-m); /* Add some space between the image and text */
   }
 
   &__track {
@@ -53,7 +54,7 @@
 
   .controls {
     position: absolute;
-    top: 70%; /* Position the controls below the album art */
+    top: 70%; /* Position the controls below the title/artist */
     left: 50%;
     transform: translateX(-50%); /* Center the controls */
     display: flex;
@@ -85,15 +86,15 @@
     }
 
     &.prev {
-      background-color: #007bff; /* Blue for previous */
+      background-color: #000000; /* Blue for previous */
     }
 
     &.play-pause {
-      background-color: #28a745; /* Green for play/pause */
+      background-color: #000000; /* Green for play/pause */
     }
 
     &.next {
-      background-color: #ffc107; /* Yellow for next */
+      background-color: #000000; /* Yellow for next */
     }
   }
 
