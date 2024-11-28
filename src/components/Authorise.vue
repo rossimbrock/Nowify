@@ -3,7 +3,8 @@
     <h1 class="authorise__heading">Nowify</h1>
 
     <p class="authorise__copy">
-      Nowify is a simple Spotify 'Now Playing' screen designed for the Raspberry Pi. Login with Spotify below and start playing some music!
+      Nowify is a simple Spotify 'Now Playing' screen designed for the Raspberry
+      Pi. Login with Spotify below and start playing some music!
     </p>
 
     <button
@@ -36,21 +37,14 @@ export default {
   },
 
   data() {
-    return {
-      codeVerifier: '', // Store the code verifier
-      codeChallenge: '' // Store the code challenge
-    }
+    return {}
   },
 
   computed: {},
 
   mounted() {
-    // Generate the code_verifier and code_challenge on load
-    this.generateCodeVerifier()
-
     /**
-     * Check if the URL contains an auth code
-     * returned after the user grants consent from Spotify.
+     * Set access token on load.
      */
     this.getUrlAuthCode()
 
@@ -71,52 +65,6 @@ export default {
     initAuthorise() {
       this.setAuthUrl()
       window.location.href = `${this.endpoints.auth}?${searchParams.toString()}`
-    },
-
-    /**
-     * Generate a random string for code_verifier and hash it to create code_challenge.
-     */
-    generateCodeVerifier() {
-      const codeVerifier = this.generateRandomString(128)
-      this.codeVerifier = codeVerifier
-      this.codeChallenge = this.sha256(codeVerifier) // Generate code_challenge using SHA-256
-    },
-
-    /**
-     * Create a random string of a given length.
-     * @param {number} length
-     * @returns {string} Random string.
-     */
-    generateRandomString(length) {
-      const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~'
-      let result = ''
-      for (let i = 0; i < length; i++) {
-        result += charset.charAt(Math.floor(Math.random() * charset.length))
-      }
-      return result
-    },
-
-    /**
-     * Hash the code_verifier using SHA-256 and encode it in base64 URL format.
-     * @param {string} verifier
-     * @returns {string} Code challenge.
-     */
-    sha256(verifier) {
-      const encoder = new TextEncoder()
-      const data = encoder.encode(verifier)
-      return crypto.subtle.digest('SHA-256', data).then((hash) => {
-        return this.base64UrlEncode(hash)
-      })
-    },
-
-    /**
-     * Base64 URL encode the SHA-256 hash.
-     * @param {ArrayBuffer} hash
-     * @returns {string} Base64 URL encoded string.
-     */
-    base64UrlEncode(hash) {
-      const base64 = btoa(String.fromCharCode.apply(null, new Uint8Array(hash)))
-      return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
     },
 
     /**
@@ -142,9 +90,8 @@ export default {
       }
 
       if (grantType === 'authorization_code') {
-        fetchData.code = this.auth.authCode
-        fetchData.redirect_uri = window.location.origin
-        fetchData.code_verifier = this.codeVerifier // Include code_verifier in the token request
+        ;(fetchData.code = this.auth.authCode),
+          (fetchData.redirect_uri = window.location.origin)
       }
 
       if (grantType === 'refresh_token') {
@@ -252,9 +199,7 @@ export default {
             .substring(5)
         ].join('-')
       )
-      searchParams.append('scope', 'user-read-currently-playing user-read-playback-position user-modify-playback-state')
-      searchParams.append('code_challenge', this.codeChallenge)
-      searchParams.append('code_challenge_method', 'S256') // Use SHA-256 for PKCE
+      searchParams.append('scope', 'user-read-currently-playing')
 
       return `${this.endpoints.auth}?${searchParams.toString()}`
     }
