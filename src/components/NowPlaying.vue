@@ -204,7 +204,7 @@ export default {
     // New Methods for Play/Pause, Next and Previous track
     async togglePlayPause() {
       try {
-        const response = await fetch(`${this.endpoints.base}/v1/me/player/play`, {
+        const response = await fetch(`${this.endpoints.base}/${this.endpoints.play}`, {
           method: this.player.playing ? 'PUT' : 'POST',
           headers: {
             Authorization: `Bearer ${this.auth.accessToken}`,
@@ -221,7 +221,7 @@ export default {
 
     async nextTrack() {
       try {
-        const response = await fetch(`${this.endpoints.base}/v1/me/player/next`, {
+        const response = await fetch(`${this.endpoints.base}/${this.endpoints.next}`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${this.auth.accessToken}`
@@ -237,7 +237,7 @@ export default {
 
     async previousTrack() {
       try {
-        const response = await fetch(`${this.endpoints.base}/v1/me/player/previous`, {
+        const response = await fetch(`${this.endpoints.base}/${this.endpoints.previous}`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${this.auth.accessToken}`

@@ -43,7 +43,10 @@ export default {
         auth: 'https://accounts.spotify.com/authorize',
         token: 'https://accounts.spotify.com/api/token',
         base: 'https://api.spotify.com/v1',
-        nowPlaying: 'me/player/currently-playing'
+        nowPlaying: 'me/player/currently-playing',
+        play: 'me/player/play',
+        next: 'me/player/next',
+        previous: 'me/player/previous'
       },
       player: {
         playing: false,
