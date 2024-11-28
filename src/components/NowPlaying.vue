@@ -182,7 +182,6 @@ export default {
         trackAlbum: {
           title: this.playerResponse.item.album.name,
           image: this.playerResponse.item.album.images.find(image => image.height === 640 && image.width === 640)?.url //|| this.playerResponse.item.album.images[0].url
-        }
       }
     },
 
