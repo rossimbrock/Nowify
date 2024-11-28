@@ -202,22 +202,48 @@ export default {
     },
 
     // New Methods for Play/Pause, Next and Previous track
-    async togglePlayPause() {
-      try {
-        const response = await fetch(`${this.endpoints.base}/${this.endpoints.play}`, {
-          method: this.player.playing ? 'PUT' : 'POST',
+  async togglePlayPause() {
+    try {
+      // Get the current playback state (whether it's playing or paused)
+      const playbackStateResponse = await fetch(`${this.endpoints.base}/me/player`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${this.auth.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      // If there's an error or no playback state, log it and return early
+      if (!playbackStateResponse.ok) {
+        throw new Error('Error fetching playback state');
+      }
+
+      const playbackState = await playbackStateResponse.json();
+
+      // If there's no active device or playback state is not found
+      if (!playbackState || !playbackState.is_playing) {
+        // If nothing is playing, start playing (POST request)
+        await fetch(`${this.endpoints.base}/${this.endpoints.play}`, {
+          method: 'POST',
           headers: {
             Authorization: `Bearer ${this.auth.accessToken}`,
             'Content-Type': 'application/json'
           }
-        })
-        if (!response.ok) {
-          throw new Error('Error toggling play/pause')
-        }
-      } catch (error) {
-        console.error(error)
+        });
+      } else {
+        // If the player is already playing, pause it (PUT request)
+        await fetch(`${this.endpoints.base}/${this.endpoints.pause}`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${this.auth.accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
       }
-    },
+    } catch (error) {
+      console.error(error);
+    }
+  },
 
     async nextTrack() {
       try {

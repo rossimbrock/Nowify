@@ -45,6 +45,7 @@ export default {
         base: 'https://api.spotify.com/v1',
         nowPlaying: 'me/player/currently-playing',
         play: 'me/player/play',
+        pause: 'me/player/pause',
         next: 'me/player/next',
         previous: 'me/player/previous'
       },
