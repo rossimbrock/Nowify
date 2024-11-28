@@ -6,17 +6,19 @@
   height: 100%;
   padding: var(--spacing-l);
   width: 100%;
-  justify-content: center; /* Added to center vertically */
+  position: relative; /* Add this to position buttons inside this container */
 
   &__cover,
   &__details {
     padding: var(--spacing-m);
     text-align: center;
     width: 100%;
+    position: relative; /* So that the buttons can be positioned relative to this */
   }
 
   &__cover {
     max-width: 400px;
+    margin: 0 auto; /* Center the album cover */
   }
 
   &__image {
@@ -42,32 +44,54 @@
   &--paused,
   &--idle {
     display: flex;
-    flex-direction: column; /* Ensure the content stacks vertically */
+    flex-direction: column;
     align-items: center;
     justify-content: center;
   }
 
   .controls {
+    position: absolute;
+    top: 70%; /* Positioning the controls below the album art */
+    left: 50%;
+    transform: translateX(-50%); /* Centering the controls */
     display: flex;
     justify-content: center;
-    gap: 20px; /* Adds space between buttons */
-    margin-top: 20px; /* Adds space above buttons */
+    gap: 20px; /* Space between buttons */
   }
 
   .control-button {
-    background: none;
-    border: none;
-    color: var(--color-text-primary);
-    font-size: 2rem; /* Icon size */
+    background-color: var(--color-text-primary);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 1.5rem;
     cursor: pointer;
-    transition: color 0.3s ease;
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 
     &:hover {
-      color: var(--color-text-primary-hover);
+      background-color: var(--color-text-primary-hover);
+      transform: scale(1.1); /* Slightly enlarge the button on hover */
     }
 
     i {
       display: block;
+    }
+
+    &.prev {
+      background-color: #007bff; /* Blue for previous */
+    }
+
+    &.play-pause {
+      background-color: #28a745; /* Green for play/pause */
+    }
+
+    &.next {
+      background-color: #ffc107; /* Yellow for next */
     }
   }
 

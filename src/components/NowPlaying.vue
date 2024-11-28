@@ -15,18 +15,18 @@
       <div v-else class="now-playing__idle-heading">
         No music is playing 😔
       </div>
-    </div>
-    <!-- Controls Section -->
-    <div class="controls">
-      <button @click="previousTrack" class="control-button">
-        <i class="fas fa-backward"></i>
-      </button>
-      <button @click="togglePlayPause" class="control-button">
-        <i :class="player.playing ? 'fas fa-pause' : 'fas fa-play'"></i>
-      </button>
-      <button @click="nextTrack" class="control-button">
-        <i class="fas fa-forward"></i>
-      </button>
+      <!-- Controls Section -->
+      <div class="controls">
+        <button @click="previousTrack" class="control-button prev">
+          <i class="fas fa-backward"></i>
+        </button>
+        <button @click="togglePlayPause" class="control-button play-pause">
+          <i :class="player.playing ? 'fas fa-pause' : 'fas fa-play'"></i>
+        </button>
+        <button @click="nextTrack" class="control-button next">
+          <i class="fas fa-forward"></i>
+        </button>
+      </div>
     </div>
   </div>
 </template>
