@@ -83,12 +83,6 @@ export default {
         if (!response.ok) {
           throw new Error(`An error has occurred: ${response.status}`)
         }
-        request = builder.build();
-        const str = request.getScopes();
-        let i = 0;
-        for(i = 0; i < str.length; i++){
-          console.log("Scope:" + str[i]);
-      }
         if (response.status === 204) {
           data = this.getEmptyPlayer()
           this.playerData = data
