@@ -12,8 +12,6 @@
 }
 
 :root {
-  --background-image: none;
-
   --spacing-m: 1rem;
   --spacing-l: 1.5rem;
   --spacing-xl: 2rem;
@@ -30,18 +28,4 @@
   --font-weight-heading: 900;
 
   --body-line-height: 1.1;
-}
-
-body {
-  background: var(--background-image) no-repeat center center fixed;
-  background-size: cover;
-  filter: blur(20px);
-  transform: scale(1.1);
-}
-
-#app {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
-  height: 100vh;
-  width: 100vw;
 }

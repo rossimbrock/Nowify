@@ -2,6 +2,28 @@
  * Global: Base Styles.
  * -----------------------------------------------------------------------------
  */
+
+:root {
+  --background-image: url(''); /* Default to an empty image */
+}
+
+body {
+  background-image: var(--background-image);
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  filter: blur(10px);
+  transition: background-image 0.5s ease-in-out;
+}
+
+.now-playing__content {
+  position: relative;
+  z-index: 2;
+}
+
+.now-playing__cover {
+  z-index: 3;
+}
 html, body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
