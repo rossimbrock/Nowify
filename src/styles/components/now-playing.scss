@@ -61,7 +61,12 @@
     justify-content: center;
     gap: 20px; /* Space between buttons */
   }
-
+  .now-playing__album {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #888; /* Lighter color to differentiate from track title */
+    margin-top: 0.5rem;
+  }
   .control-button {
     background-color: var(--color-text-primary);
     border-radius: 50%;
