@@ -8,12 +8,6 @@
   padding: var(--spacing-l);
   width: 100%;
   position: relative;
-  overflow: hidden; /* Ensure image doesn't overflow */
-  background-image: url(''); /* Placeholder image URL */
-  background-size: cover;
-  background-position: center;
-  filter: blur(10px); /* Adjust the blur as needed */
-  transition: background-image 0.5s ease-in-out; /* Smooth transition */
 
   &__content {
     display: flex;
@@ -61,15 +55,7 @@
     opacity: 0.8;
     margin: 0;
   }
-  .now-playing::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4); /* Optional dark overlay for better contrast */
-  }
+
   .controls {
     display: flex;
     justify-content: center;

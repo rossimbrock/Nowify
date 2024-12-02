@@ -161,61 +161,47 @@ export default {
       )
     },
 
-  handleNowPlaying() {
-  if (this.playerResponse.error?.status === 401 || this.playerResponse.error?.status === 400) {
-    this.handleExpiredToken()
-    return
-  }
-  if (this.playerResponse.is_playing === false) {
-    // Do not clear the track data, just ensure it remains as is
-    return
-  }
-  if (this.playerResponse.item?.id === this.playerData.trackId) {
-    // Track hasn't changed, so do nothing
-    return
-  }
-  // If the track changes, update the data
-  this.playerData = {
-    playing: this.playerResponse.is_playing,
-    trackArtists: this.playerResponse.item.artists.map(artist => artist.name),
-    trackTitle: this.playerResponse.item.name,
-    trackId: this.playerResponse.item.id,
-    trackAlbum: {
-      title: this.playerResponse.item.album.name,
-      image: this.playerResponse.item.album.images.find(image => image.height === 640 && image.width === 640)?.url || this.playerResponse.item.album.images[0].url
-    }
-  }
+    handleNowPlaying() {
+      if (this.playerResponse.error?.status === 401 || this.playerResponse.error?.status === 400) {
+        this.handleExpiredToken()
+        return
+      }
+      if (this.playerResponse.is_playing === false) {
+        // Do not clear the track data, just ensure it remains as is
+        return
+      }
+      if (this.playerResponse.item?.id === this.playerData.trackId) {
+        // Track hasn't changed, so do nothing
+        return
+      }
+      // If the track changes, update the data
+      this.playerData = {
+        playing: this.playerResponse.is_playing,
+        trackArtists: this.playerResponse.item.artists.map(artist => artist.name),
+        trackTitle: this.playerResponse.item.name,
+        trackId: this.playerResponse.item.id,
+        trackAlbum: {
+          title: this.playerResponse.item.album.name,
+          image: this.playerResponse.item.album.images.find(image => image.height === 640 && image.width === 640)?.url || this.playerResponse.item.album.images[0].url
+        }
+      }
+    },
 
-  // Set the album art URL as the background image
-  const albumImageUrl = this.playerData.trackAlbum.image;
-  const nowPlayingElement = document.querySelector('.now-playing');
-  if (nowPlayingElement) {
-    nowPlayingElement.style.backgroundImage = `url(${albumImageUrl})`;
-  }
-},
+    handleAlbumPalette(palette) {
+      let albumColours = Object.keys(palette)
+        .filter(item => item === null ? null : item)
+        .map(colour => ({
+          text: palette[colour].getTitleTextColor(),
+          background: palette[colour].getHex()
+        }))
 
-  handleAlbumPalette(palette) {
-  let albumColours = Object.keys(palette)
-    .filter(item => item === null ? null : item)
-    .map(colour => ({
-      text: palette[colour].getTitleTextColor(),
-      background: palette[colour].getHex()
-    }))
+      this.swatches = albumColours
+      this.colourPalette = albumColours[Math.floor(Math.random() * albumColours.length)]
 
-  this.swatches = albumColours
-  this.colourPalette = albumColours[Math.floor(Math.random() * albumColours.length)]
-
-  this.$nextTick(() => {
-    this.setAppColours()
-
-    // Set the album art as background for blur effect
-    const albumImageUrl = this.player.trackAlbum.image;
-    const nowPlayingElement = document.querySelector('.now-playing');
-    if (nowPlayingElement) {
-      nowPlayingElement.style.backgroundImage = `url(${albumImageUrl})`;
-    }
-  })
-},
+      this.$nextTick(() => {
+        this.setAppColours()
+      })
+    },
 
     handleExpiredToken() {
       clearInterval(this.pollPlaying)
