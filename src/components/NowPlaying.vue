@@ -1,40 +1,37 @@
 <template>
   <div id="app">
-    <!-- Background image wrapper (for the blur effect) -->
-    <div class="background-wrapper">
-      <div class="now-playing" :class="getNowPlayingClass()">
-        <!-- Main Container for Image and Right Section -->
-        <div class="now-playing__content">
-          
-          <!-- Album Cover on Left -->
-          <div v-if="player.trackTitle" class="now-playing__cover">
-            <img
-              :src="player.trackAlbum.image"
-              :alt="player.trackTitle"
-              class="now-playing__image"
-            />
+    <div class="now-playing" :class="getNowPlayingClass()">
+      <!-- Main Container for Image and Right Section -->
+      <div class="now-playing__content">
+        
+        <!-- Album Cover on Left -->
+        <div v-if="player.trackTitle" class="now-playing__cover">
+          <img
+            :src="player.trackAlbum.image"
+            :alt="player.trackTitle"
+            class="now-playing__image"
+          />
+        </div>
+        
+        <!-- Song Details and Controls on Right -->
+        <div class="now-playing__right">
+          <div class="now-playing__details">
+            <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
+            <h2 class="now-playing__artists" v-text="getTrackArtists"></h2>
+            <h3 class="now-playing__album" v-text="player.trackAlbum.title"></h3>
           </div>
-          
-          <!-- Song Details and Controls on Right -->
-          <div class="now-playing__right">
-            <!-- Song Title and Artist Name -->
-            <div class="now-playing__details">
-              <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
-              <h2 class="now-playing__artists" v-text="getTrackArtists"></h2>
-            </div>
 
-            <!-- Control Buttons (Play/Pause, Previous, Next) -->
-            <div class="controls">
-              <button @click="previousTrack" class="control-button prev">
-                <i class="fas fa-backward"></i>
-              </button>
-              <button @click="togglePlayPause" class="control-button play-pause">
-                <i :class="player.playing ? 'fas fa-pause' : 'fas fa-play'"></i>
-              </button>
-              <button @click="nextTrack" class="control-button next">
-                <i class="fas fa-forward"></i>
-              </button>
-            </div>
+          <!-- Control Buttons (Play/Pause, Previous, Next) -->
+          <div class="controls">
+            <button @click="previousTrack" class="control-button prev">
+              <i class="fas fa-backward"></i>
+            </button>
+            <button @click="togglePlayPause" class="control-button play-pause">
+              <i :class="player.playing ? 'fas fa-pause' : 'fas fa-play'"></i>
+            </button>
+            <button @click="nextTrack" class="control-button next">
+              <i class="fas fa-forward"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -44,6 +41,8 @@
 
 
 <script>
+import * as Vibrant from 'node-vibrant'
+
 import props from '@/utils/props.js'
 
 export default {
@@ -119,26 +118,19 @@ export default {
       return `now-playing--${playerClass}`
     },
 
-  getAlbumColours() {
-    if (!this.player.trackAlbum?.image) {
-      return;
-    }
-
-    // Set the album cover image as the background
-    const albumImage = this.player.trackAlbum.image;
-    const backgroundElement = document.documentElement;
-
-    backgroundElement.style.setProperty(
-      '--background-image',
-      `url(${albumImage})`
-    );
-  },
-
-  updateBackgroundImage() {
-      if (this.player.trackAlbum?.image) {
-        document.querySelector('.background-wrapper').style.backgroundImage = `url(${this.player.trackAlbum.image})`;
+    getAlbumColours() {
+      if (!this.player.trackAlbum?.image) {
+        return
       }
-  },
+
+      Vibrant.from(this.player.trackAlbum.image)
+        .quality(1)
+        .clearFilters()
+        .getPalette()
+        .then(palette => {
+          this.handleAlbumPalette(palette)
+        })
+    },
 
     getEmptyPlayer() {
       return {
@@ -155,6 +147,18 @@ export default {
       this.pollPlaying = setInterval(() => {
         this.getNowPlaying()
       }, 1000)
+    },
+
+    setAppColours() {
+      document.documentElement.style.setProperty(
+        '--color-text-primary',
+        this.colourPalette.text
+      )
+
+      document.documentElement.style.setProperty(
+        '--colour-background-now-playing',
+        this.colourPalette.background
+      )
     },
 
     handleNowPlaying() {
@@ -302,11 +306,10 @@ export default {
     },
 
     playerData: function() {
-      this.$emit('spotifyTrackUpdated', this.playerData);
+      this.$emit('spotifyTrackUpdated', this.playerData)
       this.$nextTick(() => {
-        this.getAlbumColours();
-        this.updateBackgroundImage(); // Update background image after track change
-      });
+        this.getAlbumColours()
+      })
     }
   }
 }
