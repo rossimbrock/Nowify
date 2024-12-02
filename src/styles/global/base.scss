@@ -2,6 +2,37 @@
  * Global: Base Styles.
  * -----------------------------------------------------------------------------
  */
+
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden; /* Prevent scrolling when background image is applied */
+}
+
+.background-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1; /* Ensure the background is behind all content */
+  background-image: url(''); /* Default background (will be dynamically set in JS) */
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  filter: blur(10px);
+  transition: background-image 0.5s ease-in-out;
+}
+
+.now-playing__content {
+  position: relative;
+  z-index: 2; /* Ensure the NowPlaying content sits above the background */
+}
+
+.now-playing__cover {
+  z-index: 3; /* Ensure the cover image sits above the background */
+}
+
 html, body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;

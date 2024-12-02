@@ -1,37 +1,40 @@
 <template>
   <div id="app">
-    <div class="now-playing" :class="getNowPlayingClass()">
-      <!-- Main Container for Image and Right Section -->
-      <div class="now-playing__content">
-        
-        <!-- Album Cover on Left -->
-        <div v-if="player.trackTitle" class="now-playing__cover">
-          <img
-            :src="player.trackAlbum.image"
-            :alt="player.trackTitle"
-            class="now-playing__image"
-          />
-        </div>
-        
-        <!-- Song Details and Controls on Right -->
-        <div class="now-playing__right">
-          <div class="now-playing__details">
-            <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
-            <h2 class="now-playing__artists" v-text="getTrackArtists"></h2>
-            <h3 class="now-playing__album" v-text="player.trackAlbum.title"></h3>
+    <!-- Background image wrapper (for the blur effect) -->
+    <div class="background-wrapper">
+      <div class="now-playing" :class="getNowPlayingClass()">
+        <!-- Main Container for Image and Right Section -->
+        <div class="now-playing__content">
+          
+          <!-- Album Cover on Left -->
+          <div v-if="player.trackTitle" class="now-playing__cover">
+            <img
+              :src="player.trackAlbum.image"
+              :alt="player.trackTitle"
+              class="now-playing__image"
+            />
           </div>
+          
+          <!-- Song Details and Controls on Right -->
+          <div class="now-playing__right">
+            <!-- Song Title and Artist Name -->
+            <div class="now-playing__details">
+              <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
+              <h2 class="now-playing__artists" v-text="getTrackArtists"></h2>
+            </div>
 
-          <!-- Control Buttons (Play/Pause, Previous, Next) -->
-          <div class="controls">
-            <button @click="previousTrack" class="control-button prev">
-              <i class="fas fa-backward"></i>
-            </button>
-            <button @click="togglePlayPause" class="control-button play-pause">
-              <i :class="player.playing ? 'fas fa-pause' : 'fas fa-play'"></i>
-            </button>
-            <button @click="nextTrack" class="control-button next">
-              <i class="fas fa-forward"></i>
-            </button>
+            <!-- Control Buttons (Play/Pause, Previous, Next) -->
+            <div class="controls">
+              <button @click="previousTrack" class="control-button prev">
+                <i class="fas fa-backward"></i>
+              </button>
+              <button @click="togglePlayPause" class="control-button play-pause">
+                <i :class="player.playing ? 'fas fa-pause' : 'fas fa-play'"></i>
+              </button>
+              <button @click="nextTrack" class="control-button next">
+                <i class="fas fa-forward"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -129,6 +132,12 @@ export default {
       '--background-image',
       `url(${albumImage})`
     );
+  },
+
+  updateBackgroundImage() {
+      if (this.player.trackAlbum?.image) {
+        document.querySelector('.background-wrapper').style.backgroundImage = `url(${this.player.trackAlbum.image})`;
+      }
   },
 
     getEmptyPlayer() {
@@ -293,10 +302,11 @@ export default {
     },
 
     playerData: function() {
-      this.$emit('spotifyTrackUpdated', this.playerData)
+      this.$emit('spotifyTrackUpdated', this.playerData);
       this.$nextTick(() => {
-        this.getAlbumColours()
-      })
+        this.getAlbumColours();
+        this.updateBackgroundImage(); // Update background image after track change
+      });
     }
   }
 }
