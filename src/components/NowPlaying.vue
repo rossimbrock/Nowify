@@ -118,19 +118,20 @@ export default {
       return `now-playing--${playerClass}`
     },
 
-    getAlbumColours() {
-      if (!this.player.trackAlbum?.image) {
-        return
-      }
+  getAlbumColours() {
+    if (!this.player.trackAlbum?.image) {
+      return;
+    }
 
-      Vibrant.from(this.player.trackAlbum.image)
-        .quality(1)
-        .clearFilters()
-        .getPalette()
-        .then(palette => {
-          this.handleAlbumPalette(palette)
-        })
-    },
+    // Set the album cover image as the background
+    const albumImage = this.player.trackAlbum.image;
+    const backgroundElement = document.documentElement;
+
+    backgroundElement.style.setProperty(
+      '--background-image',
+      `url(${albumImage})`
+    );
+  },
 
     getEmptyPlayer() {
       return {
@@ -147,18 +148,6 @@ export default {
       this.pollPlaying = setInterval(() => {
         this.getNowPlaying()
       }, 1000)
-    },
-
-    setAppColours() {
-      document.documentElement.style.setProperty(
-        '--color-text-primary',
-        this.colourPalette.text
-      )
-
-      document.documentElement.style.setProperty(
-        '--colour-background-now-playing',
-        this.colourPalette.background
-      )
     },
 
     handleNowPlaying() {
