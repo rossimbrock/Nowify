@@ -74,9 +74,7 @@ export default {
     nowPlayingStyle() {
       // Dynamically set the background style
       return {
-        background: this.colourPalette && this.colourPalette.length > 1
-          ? `linear-gradient(135deg, ${this.colourPalette[0].background} 0%, ${this.colourPalette[1].background} 100%)`
-          : ''
+        background: this.colourPalette ? `linear-gradient(135deg, ${this.colourPalette[0]} 0%, ${this.colourPalette[1]} 100%)` : ''
       };
     }
   },
@@ -205,15 +203,20 @@ export default {
     },
 
     handleAlbumPalette(palette) {
-      let albumColours = Object.keys(palette)
-        .filter(item => item === null ? null : item)
+      // Get the most prominent colors
+      const albumColours = Object.keys(palette)
+        .filter(item => item !== null)
         .map(colour => ({
           text: palette[colour].getTitleTextColor(),
           background: palette[colour].getHex()
-        }))
+        }));
 
-      this.swatches = albumColours
-      this.colourPalette = albumColours.length > 1 ? albumColours.slice(0, 2) : albumColours
+      // Sort by vibrancy to get the most prominent colors
+      albumColours.sort((a, b) => b.background - a.background);
+      
+      // Select two distinct colors
+      this.swatches = albumColours;
+      this.colourPalette = [albumColours[0].background, albumColours[1].background]; // First and second distinct colors
 
       this.previousAlbumImage = this.player.trackAlbum.image // Save the album image for comparison
 
