@@ -164,13 +164,13 @@ export default {
     setAppColours() {
       document.documentElement.style.setProperty(
         '--color-text-primary',
-        this.colourPalette.text
-      )
+        this.colourPalette.text || '#ffffff' // Default to white if no color found
+      );
 
       document.documentElement.style.setProperty(
         '--colour-background-now-playing',
-        this.colourPalette.background
-      )
+        this.colourPalette.background || 'linear-gradient(to bottom right, #000, #000)' // Default to black if no color found
+      );
     },
 
     handleNowPlaying() {
@@ -213,8 +213,8 @@ export default {
       if (primaryColor && secondaryColor) {
         // Lighten the colors to make them subtle
         const lightenColor = (rgb) => {
-          const factor = 1.4;
-          return rgb.map(value => Math.min(255, value * factor));
+          const factor = 1.2; // Subtle lightening factor
+          return rgb.map(value => Math.min(255, Math.floor(value * factor)));
         };
 
         const lightPrimary = lightenColor(primaryColor);
@@ -224,11 +224,12 @@ export default {
         this.colourPalette = {
           background: `linear-gradient(to bottom right, rgb(${lightPrimary.join(',')}), rgb(${lightSecondary.join(',')}))`
         };
-      }
 
-      this.$nextTick(() => {
-        this.setAppColours();
-      });
+        // Apply the gradient as the background
+        this.$nextTick(() => {
+          this.setAppColours();
+        });
+      }
     },
 
     handleExpiredToken() {
