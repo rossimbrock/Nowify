@@ -1,9 +1,11 @@
 <template>
   <div id="app">
     <div class="now-playing" :class="getNowPlayingClass()">
+      <!-- Time Display -->
+      <div class="now-playing__time" style="font-size: 1rem; font-weight: 400; margin-top: 0.5rem; opacity: 0.6;">{{ currentTime }}</div>
+
       <!-- Main Container for Image and Right Section -->
       <div class="now-playing__content">
-        
         <!-- Album Cover on Left -->
         <div v-if="player.trackTitle" class="now-playing__cover">
           <img
@@ -12,7 +14,7 @@
             class="now-playing__image"
           />
         </div>
-        
+
         <!-- Song Details and Controls on Right -->
         <div class="now-playing__right">
           <div class="now-playing__details">
@@ -51,7 +53,7 @@ export default {
   props: {
     auth: props.auth,
     endpoints: props.endpoints,
-    player: props.player
+    player: props.player,
   },
 
   data() {
@@ -60,18 +62,21 @@ export default {
       playerResponse: {},
       playerData: this.getEmptyPlayer(),
       colourPalette: '',
-      swatches: []
-    }
+      swatches: [],
+      currentTime: '',
+    };
   },
 
   computed: {
     getTrackArtists() {
-      return this.player.trackArtists.join(', ')
-    }
+      return this.player.trackArtists.join(', ');
+    },
   },
 
   mounted() {
-    this.setDataInterval()
+    this.setDataInterval();
+    this.updateTime();
+    setInterval(this.updateTime, 60000); // Update time every minute
   },
 
   beforeDestroy() {
@@ -79,6 +84,14 @@ export default {
   },
 
   methods: {
+    updateTime() {
+      const now = new Date();
+      const hours = now.getHours() % 12 || 12;
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const period = now.getHours() >= 12 ? 'PM' : 'AM';
+      this.currentTime = `${hours}:${minutes} ${period}`;
+    },
+    
     async getNowPlaying() {
       let data = {}
       try {

@@ -9,6 +9,14 @@
   width: 100%;
   position: relative;
 
+  &__time {
+    position: absolute;
+    top: var(--spacing-s);
+    left: var(--spacing-s);
+    font-size: 1rem;
+    opacity: 0.6;
+  }
+  
   &__content {
     display: flex;
     justify-content: center;
