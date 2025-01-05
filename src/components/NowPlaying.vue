@@ -211,19 +211,16 @@ export default {
       const secondaryColor = sortedSwatches[1]?.swatch.getRgb();
 
       if (primaryColor && secondaryColor) {
-        const primaryHex = `rgb(${primaryColor[0]}, ${primaryColor[1]}, ${primaryColor[2]})`;
-        const secondaryHex = `rgb(${secondaryColor[0]}, ${secondaryColor[1]}, ${secondaryColor[2]})`;
-
         // Lighten the colors to make them subtle
         const lightenColor = (rgb) => {
           const factor = 1.4;
           return rgb.map(value => Math.min(255, value * factor));
-        }
+        };
 
         const lightPrimary = lightenColor(primaryColor);
         const lightSecondary = lightenColor(secondaryColor);
 
-        // Set the background gradient using the two colors
+        // Set the background gradient using the two lightened colors
         this.colourPalette = {
           background: `linear-gradient(to bottom right, rgb(${lightPrimary.join(',')}), rgb(${lightSecondary.join(',')}))`
         };
