@@ -74,7 +74,9 @@ export default {
     nowPlayingStyle() {
       // Dynamically set the background style
       return {
-        background: this.colourPalette ? `linear-gradient(135deg, ${this.colourPalette.background} 0%, rgba(255, 255, 255, 0.3) 100%)` : ''
+        background: this.colourPalette && this.colourPalette.length > 1
+          ? `linear-gradient(135deg, ${this.colourPalette[0].background} 0%, ${this.colourPalette[1].background} 100%)`
+          : ''
       };
     }
   },
@@ -211,7 +213,7 @@ export default {
         }))
 
       this.swatches = albumColours
-      this.colourPalette = albumColours[Math.floor(Math.random() * albumColours.length)]
+      this.colourPalette = albumColours.length > 1 ? albumColours.slice(0, 2) : albumColours
 
       this.previousAlbumImage = this.player.trackAlbum.image // Save the album image for comparison
 
