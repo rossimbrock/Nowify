@@ -8,16 +8,15 @@
   padding: var(--spacing-l);
   width: 100%;
   position: relative;
-  transition: background-color 0.5s ease; /* Smooth transition for background change */
 
   &__time {
     position: absolute;
     top: 10px;
     right: 10px;
-    font-size: 1rem; /* Match the album name's font size */
-    opacity: 0.6; /* Match the album name's opacity */
-    font-weight: 400; /* Match the album name's font weight */
-    z-index: 10; /* Ensure it appears above other elements */
+    font-size: 1rem;
+    opacity: 0.6;
+    font-weight: 400;
+    z-index: 10;
   }
 
   &__content {
@@ -93,12 +92,20 @@
     cursor: pointer;
     border: none;
     transition: background-color 0.3s ease, transform 0.2s ease;
-    
+
     i {
       display: block;
     }
 
-    &.prev, &.play-pause, &.next {
+    &.prev {
+      background-color: #000000;
+    }
+
+    &.play-pause {
+      background-color: #000000;
+    }
+
+    &.next {
       background-color: #000000;
     }
   }
