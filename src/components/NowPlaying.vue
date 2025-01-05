@@ -203,21 +203,30 @@ export default {
     },
 
     handleAlbumPalette(palette) {
-      // Get the most prominent colors
+      // Convert the palette into an array of colors
       const albumColours = Object.keys(palette)
         .filter(item => item !== null)
         .map(colour => ({
           text: palette[colour].getTitleTextColor(),
-          background: palette[colour].getHex()
+          background: palette[colour].getHex(),
+          population: palette[colour].getPopulation()
         }));
 
-      // Sort by vibrancy to get the most prominent colors
-      albumColours.sort((a, b) => b.background - a.background);
-      
-      // Select two distinct colors
-      this.swatches = albumColours;
-      this.colourPalette = [albumColours[0].background, albumColours[1].background]; // First and second distinct colors
+      // Sort the colors based on their population, descending
+      albumColours.sort((a, b) => b.population - a.population);
 
+      // Select the primary color (most populated) and the second most prominent distinct color
+      let primaryColor = albumColours[0].background;
+      let secondaryColor = albumColours[1] && albumColours[1].background;
+
+      // Check for similar colors and adjust if necessary
+      if (primaryColor && secondaryColor) {
+        this.colourPalette = [primaryColor, secondaryColor];
+      } else {
+        this.colourPalette = [primaryColor, albumColours[2]?.background || '#FF69B4']; // Fallback to a neutral color if no secondary color
+      }
+
+      // Update the UI
       this.previousAlbumImage = this.player.trackAlbum.image // Save the album image for comparison
 
       this.$nextTick(() => {
