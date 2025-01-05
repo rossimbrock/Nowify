@@ -63,6 +63,7 @@ export default {
       colourPalette: '',
       swatches: [],
       currentTime: '',
+      previousAlbumImage: '',  // Track the previous album image for comparison
     };
   },
 
@@ -70,6 +71,12 @@ export default {
     getTrackArtists() {
       return this.player.trackArtists.join(', ');
     },
+    nowPlayingStyle() {
+      // Dynamically set the background style
+      return {
+        background: this.colourPalette ? `linear-gradient(135deg, ${this.colourPalette.background} 0%, rgba(255, 255, 255, 0.3) 100%)` : ''
+      };
+    }
   },
 
   mounted() {
@@ -90,7 +97,7 @@ export default {
       const period = now.getHours() >= 12 ? 'PM' : 'AM';
       this.currentTime = `${hours}:${minutes} ${period}`;
     },
-
+    
     async getNowPlaying() {
       let data = {}
       try {
@@ -164,13 +171,12 @@ export default {
     setAppColours() {
       document.documentElement.style.setProperty(
         '--color-text-primary',
-        this.colourPalette.text || '#ffffff' // Default to white if no color found
-      );
-
+        this.colourPalette.text
+      )
       document.documentElement.style.setProperty(
         '--colour-background-now-playing',
-        this.colourPalette.background || 'linear-gradient(to bottom right, #000, #000)' // Default to black if no color found
-      );
+        this.colourPalette.background
+      )
     },
 
     handleNowPlaying() {
@@ -179,14 +185,11 @@ export default {
         return
       }
       if (this.playerResponse.is_playing === false) {
-        // Do not clear the track data, just ensure it remains as is
         return
       }
       if (this.playerResponse.item?.id === this.playerData.trackId) {
-        // Track hasn't changed, so do nothing
         return
       }
-      // If the track changes, update the data
       this.playerData = {
         playing: this.playerResponse.is_playing,
         trackArtists: this.playerResponse.item.artists.map(artist => artist.name),
@@ -200,36 +203,21 @@ export default {
     },
 
     handleAlbumPalette(palette) {
-      // Sort the colors by frequency
-      const sortedSwatches = Object.entries(palette)
-        .map(([color, swatch]) => ({ color, swatch }))
-        .filter(item => item.swatch)
-        .sort((a, b) => b.swatch.getPopulation() - a.swatch.getPopulation());
+      let albumColours = Object.keys(palette)
+        .filter(item => item === null ? null : item)
+        .map(colour => ({
+          text: palette[colour].getTitleTextColor(),
+          background: palette[colour].getHex()
+        }))
 
-      // Get the top two colors
-      const primaryColor = sortedSwatches[0]?.swatch.getRgb();
-      const secondaryColor = sortedSwatches[1]?.swatch.getRgb();
+      this.swatches = albumColours
+      this.colourPalette = albumColours[Math.floor(Math.random() * albumColours.length)]
 
-      if (primaryColor && secondaryColor) {
-        // Lighten the colors to make them subtle
-        const lightenColor = (rgb) => {
-          const factor = 1.2; // Subtle lightening factor
-          return rgb.map(value => Math.min(255, Math.floor(value * factor)));
-        };
+      this.previousAlbumImage = this.player.trackAlbum.image // Save the album image for comparison
 
-        const lightPrimary = lightenColor(primaryColor);
-        const lightSecondary = lightenColor(secondaryColor);
-
-        // Set the background gradient using the two lightened colors
-        this.colourPalette = {
-          background: `linear-gradient(to bottom right, rgb(${lightPrimary.join(',')}), rgb(${lightSecondary.join(',')}))`
-        };
-
-        // Apply the gradient as the background
-        this.$nextTick(() => {
-          this.setAppColours();
-        });
-      }
+      this.$nextTick(() => {
+        this.setAppColours()
+      })
     },
 
     handleExpiredToken() {
@@ -239,7 +227,6 @@ export default {
 
     async togglePlayPause() {
       try {
-        // Get the current playback state (whether it's playing or paused)
         const playbackStateResponse = await fetch(`${this.endpoints.base}/me/player`, {
           method: 'GET',
           headers: {
@@ -255,9 +242,8 @@ export default {
         const playbackState = await playbackStateResponse.json();
 
         if (!playbackState || !playbackState.is_playing) {
-          // POST to start playback if nothing is playing
           const playResponse = await fetch(`${this.endpoints.base}/me/player/play`, {
-            method: 'PUT', // Use PUT for play (should be PUT, not POST)
+            method: 'PUT',
             headers: {
               Authorization: `Bearer ${this.auth.accessToken}`,
               'Content-Type': 'application/json'
@@ -270,9 +256,8 @@ export default {
 
           this.player.playing = true;
         } else {
-          // PUT to pause the track if it is currently playing
           const pauseResponse = await fetch(`${this.endpoints.base}/me/player/pause`, {
-            method: 'PUT', // Use PUT to pause
+            method: 'PUT',
             headers: {
               Authorization: `Bearer ${this.auth.accessToken}`,
               'Content-Type': 'application/json'
