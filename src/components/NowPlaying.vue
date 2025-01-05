@@ -1,11 +1,12 @@
 <template>
   <div id="app">
+    <!-- Add the time display in the top-left corner -->
+    <div class="now-playing__time" v-text="currentTime"></div>
+    
     <div class="now-playing" :class="getNowPlayingClass()">
-      <!-- Time Display -->
-      <div class="now-playing__time" style="font-size: 1rem; font-weight: 400; margin-top: 0.5rem; opacity: 0.6;">{{ currentTime }}</div>
-
       <!-- Main Container for Image and Right Section -->
       <div class="now-playing__content">
+        
         <!-- Album Cover on Left -->
         <div v-if="player.trackTitle" class="now-playing__cover">
           <img
@@ -14,7 +15,7 @@
             class="now-playing__image"
           />
         </div>
-
+        
         <!-- Song Details and Controls on Right -->
         <div class="now-playing__right">
           <div class="now-playing__details">
@@ -41,11 +42,10 @@
   </div>
 </template>
 
-
 <script>
-import * as Vibrant from 'node-vibrant'
+import * as Vibrant from 'node-vibrant';
 
-import props from '@/utils/props.js'
+import props from '@/utils/props.js';
 
 export default {
   name: 'NowPlaying',
@@ -53,7 +53,7 @@ export default {
   props: {
     auth: props.auth,
     endpoints: props.endpoints,
-    player: props.player,
+    player: props.player
   },
 
   data() {
@@ -63,14 +63,14 @@ export default {
       playerData: this.getEmptyPlayer(),
       colourPalette: '',
       swatches: [],
-      currentTime: '',
+      currentTime: ''
     };
   },
 
   computed: {
     getTrackArtists() {
       return this.player.trackArtists.join(', ');
-    },
+    }
   },
 
   mounted() {
@@ -80,7 +80,7 @@ export default {
   },
 
   beforeDestroy() {
-    clearInterval(this.pollPlaying)
+    clearInterval(this.pollPlaying);
   },
 
   methods: {
@@ -88,12 +88,12 @@ export default {
       const now = new Date();
       const hours = now.getHours() % 12 || 12;
       const minutes = now.getMinutes().toString().padStart(2, '0');
-      const period = now.getHours() >= 12 ? 'PM' : 'AM';
-      this.currentTime = `${hours}:${minutes} ${period}`;
+      const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+      this.currentTime = `${hours}:${minutes} ${ampm}`;
     },
-    
+
     async getNowPlaying() {
-      let data = {}
+      let data = {};
       try {
         const response = await fetch(
           `${this.endpoints.base}/${this.endpoints.nowPlaying}`,
@@ -102,38 +102,38 @@ export default {
               Authorization: `Bearer ${this.auth.accessToken}`
             }
           }
-        )
+        );
         if (!response.ok) {
-          throw new Error(`An error has occurred: ${response.status}`)
+          throw new Error(`An error has occurred: ${response.status}`);
         }
         if (response.status === 204) {
-          data = this.getEmptyPlayer()
-          this.playerData = data
+          data = this.getEmptyPlayer();
+          this.playerData = data;
           this.$nextTick(() => {
-            this.$emit('spotifyTrackUpdated', data)
-          })
-          return
+            this.$emit('spotifyTrackUpdated', data);
+          });
+          return;
         }
-        data = await response.json()
-        this.playerResponse = data
+        data = await response.json();
+        this.playerResponse = data;
       } catch (error) {
-        this.handleExpiredToken()
-        data = this.getEmptyPlayer()
-        this.playerData = data
+        this.handleExpiredToken();
+        data = this.getEmptyPlayer();
+        this.playerData = data;
         this.$nextTick(() => {
-          this.$emit('spotifyTrackUpdated', data)
-        })
+          this.$emit('spotifyTrackUpdated', data);
+        });
       }
     },
 
     getNowPlayingClass() {
-      const playerClass = this.player.trackTitle ? (this.player.playing ? 'active' : 'paused') : 'idle'
-      return `now-playing--${playerClass}`
+      const playerClass = this.player.trackTitle ? (this.player.playing ? 'active' : 'paused') : 'idle';
+      return `now-playing--${playerClass}`;
     },
 
     getAlbumColours() {
       if (!this.player.trackAlbum?.image) {
-        return
+        return;
       }
 
       Vibrant.from(this.player.trackAlbum.image)
@@ -141,8 +141,8 @@ export default {
         .clearFilters()
         .getPalette()
         .then(palette => {
-          this.handleAlbumPalette(palette)
-        })
+          this.handleAlbumPalette(palette);
+        });
     },
 
     getEmptyPlayer() {
@@ -152,40 +152,40 @@ export default {
         trackArtists: [],
         trackId: '',
         trackTitle: ''
-      }
+      };
     },
 
     setDataInterval() {
-      clearInterval(this.pollPlaying)
+      clearInterval(this.pollPlaying);
       this.pollPlaying = setInterval(() => {
-        this.getNowPlaying()
-      }, 1000)
+        this.getNowPlaying();
+      }, 1000);
     },
 
     setAppColours() {
       document.documentElement.style.setProperty(
         '--color-text-primary',
         this.colourPalette.text
-      )
+      );
 
       document.documentElement.style.setProperty(
         '--colour-background-now-playing',
         this.colourPalette.background
-      )
+      );
     },
 
     handleNowPlaying() {
       if (this.playerResponse.error?.status === 401 || this.playerResponse.error?.status === 400) {
-        this.handleExpiredToken()
-        return
+        this.handleExpiredToken();
+        return;
       }
       if (this.playerResponse.is_playing === false) {
         // Do not clear the track data, just ensure it remains as is
-        return
+        return;
       }
       if (this.playerResponse.item?.id === this.playerData.trackId) {
         // Track hasn't changed, so do nothing
-        return
+        return;
       }
       // If the track changes, update the data
       this.playerData = {
@@ -197,7 +197,7 @@ export default {
           title: this.playerResponse.item.album.name,
           image: this.playerResponse.item.album.images.find(image => image.height === 640 && image.width === 640)?.url || this.playerResponse.item.album.images[0].url
         }
-      }
+      };
     },
 
     handleAlbumPalette(palette) {
@@ -206,19 +206,19 @@ export default {
         .map(colour => ({
           text: palette[colour].getTitleTextColor(),
           background: palette[colour].getHex()
-        }))
+        }));
 
-      this.swatches = albumColours
-      this.colourPalette = albumColours[Math.floor(Math.random() * albumColours.length)]
+      this.swatches = albumColours;
+      this.colourPalette = albumColours[Math.floor(Math.random() * albumColours.length)];
 
       this.$nextTick(() => {
-        this.setAppColours()
-      })
+        this.setAppColours();
+      });
     },
 
     handleExpiredToken() {
-      clearInterval(this.pollPlaying)
-      this.$emit('requestRefreshToken')
+      clearInterval(this.pollPlaying);
+      this.$emit('requestRefreshToken');
     },
 
     async togglePlayPause() {
@@ -281,12 +281,12 @@ export default {
           headers: {
             Authorization: `Bearer ${this.auth.accessToken}`
           }
-        })
+        });
         if (!response.ok) {
-          throw new Error('Error skipping to the next track')
+          throw new Error('Error skipping to the next track');
         }
       } catch (error) {
-        console.error(error)
+        console.error(error);
       }
     },
 
@@ -297,12 +297,12 @@ export default {
           headers: {
             Authorization: `Bearer ${this.auth.accessToken}`
           }
-        })
+        });
         if (!response.ok) {
-          throw new Error('Error going to the previous track')
+          throw new Error('Error going to the previous track');
         }
       } catch (error) {
-        console.error(error)
+        console.error(error);
       }
     }
   },
@@ -310,22 +310,22 @@ export default {
   watch: {
     auth: function(oldVal, newVal) {
       if (newVal.status === false) {
-        clearInterval(this.pollPlaying)
+        clearInterval(this.pollPlaying);
       }
     },
 
     playerResponse: function() {
-      this.handleNowPlaying()
+      this.handleNowPlaying();
     },
 
     playerData: function() {
-      this.$emit('spotifyTrackUpdated', this.playerData)
+      this.$emit('spotifyTrackUpdated', this.playerData);
       this.$nextTick(() => {
-        this.getAlbumColours()
-      })
+        this.getAlbumColours();
+      });
     }
   }
-}
+};
 </script>
 
 <style src="@/styles/components/now-playing.scss" lang="scss" scoped></style>
