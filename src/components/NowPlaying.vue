@@ -249,10 +249,8 @@ export default {
 
       if (luminance < 0.5) {
         this.timeColor = 'white';  // Dark background -> white time text
-      } else if (luminance > 0.8) {
+      } else{
         this.timeColor = 'black';  // Light background -> black time text
-      } else {
-        this.timeColor = '#888888';  // Neutral gray for medium brightness
       }
     },
 
