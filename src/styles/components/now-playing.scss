@@ -16,15 +16,15 @@
     font-size: 1rem;
     opacity: 0.6;
   }
-  
+
   &__content {
     display: flex;
     justify-content: center;
     align-items: center;
-    max-width: 1000px; /* Ensures the content doesn't stretch too wide */
+    max-width: 1000px;
     width: 100%;
     flex-direction: row;
-    gap: var(--spacing-m); /* Adds space between image and text + controls */
+    gap: var(--spacing-m);
   }
 
   &__cover {
@@ -36,9 +36,9 @@
   }
 
   &__image {
-    box-shadow: 1px 1px 16px -2px rgba(0, 0, 0, .3);
+    box-shadow: 1px 1px 16px -2px rgba(0, 0, 0, 0.3);
     height: auto;
-    width: 250px; /* Make the image larger */
+    width: 250px;
   }
 
   &__right {
@@ -51,7 +51,7 @@
   }
 
   &__details {
-    margin-bottom: var(--spacing-m); /* Space between details and controls */
+    margin-bottom: var(--spacing-m);
   }
 
   &__track {
@@ -67,14 +67,16 @@
   .controls {
     display: flex;
     justify-content: center;
-    gap: 20px; /* Space between buttons */
+    gap: 20px;
   }
+
   .now-playing__album {
     font-size: 1rem;
     font-weight: 400;
     margin-top: 0.5rem;
     opacity: 0.6;
   }
+
   .control-button {
     background-color: var(--color-text-primary);
     border-radius: 50%;
@@ -99,15 +101,15 @@
     }
 
     &.prev {
-      background-color: #000000; /* Blue for previous */
+      background-color: #000000;
     }
 
     &.play-pause {
-      background-color: #000000; /* Green for play/pause */
+      background-color: #000000;
     }
 
     &.next {
-      background-color: #000000; /* Yellow for next */
+      background-color: #000000;
     }
   }
 
@@ -116,18 +118,15 @@
     width: 100%;
     &__content {
       flex-direction: row;
-      gap: var(--spacing-l); /* Increase space between image and text + controls */
+      gap: var(--spacing-l);
     }
 
     &__image {
-      width: 300px; /* Make the image a little bigger on larger screens */
+      width: 300px;
     }
 
     &__details {
       text-align: left;
     }
-  }
-  * {
-    cursor: none;
   }
 }
