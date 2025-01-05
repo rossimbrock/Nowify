@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div class="now-playing" :class="getNowPlayingClass()">
+    <div class="now-playing" :class="getNowPlayingClass()" :style="nowPlayingStyle">
       <!-- Time Display -->
       <div class="now-playing__time" style="font-size: 1rem; font-weight: 400; margin-top: 0.5rem; opacity: 0.6;">{{ currentTime }}</div>
 
@@ -41,7 +41,6 @@
   </div>
 </template>
 
-
 <script>
 import * as Vibrant from 'node-vibrant'
 
@@ -64,6 +63,7 @@ export default {
       colourPalette: '',
       swatches: [],
       currentTime: '',
+      previousAlbumImage: '',  // Track the previous album image for comparison
     };
   },
 
@@ -71,6 +71,12 @@ export default {
     getTrackArtists() {
       return this.player.trackArtists.join(', ');
     },
+    nowPlayingStyle() {
+      // Dynamically set the background style
+      return {
+        background: this.colourPalette ? `linear-gradient(135deg, ${this.colourPalette.background} 0%, rgba(255, 255, 255, 0.3) 100%)` : ''
+      };
+    }
   },
 
   mounted() {
@@ -167,7 +173,6 @@ export default {
         '--color-text-primary',
         this.colourPalette.text
       )
-
       document.documentElement.style.setProperty(
         '--colour-background-now-playing',
         this.colourPalette.background
@@ -180,14 +185,11 @@ export default {
         return
       }
       if (this.playerResponse.is_playing === false) {
-        // Do not clear the track data, just ensure it remains as is
         return
       }
       if (this.playerResponse.item?.id === this.playerData.trackId) {
-        // Track hasn't changed, so do nothing
         return
       }
-      // If the track changes, update the data
       this.playerData = {
         playing: this.playerResponse.is_playing,
         trackArtists: this.playerResponse.item.artists.map(artist => artist.name),
@@ -211,6 +213,8 @@ export default {
       this.swatches = albumColours
       this.colourPalette = albumColours[Math.floor(Math.random() * albumColours.length)]
 
+      this.previousAlbumImage = this.player.trackAlbum.image // Save the album image for comparison
+
       this.$nextTick(() => {
         this.setAppColours()
       })
@@ -223,7 +227,6 @@ export default {
 
     async togglePlayPause() {
       try {
-        // Get the current playback state (whether it's playing or paused)
         const playbackStateResponse = await fetch(`${this.endpoints.base}/me/player`, {
           method: 'GET',
           headers: {
@@ -239,9 +242,8 @@ export default {
         const playbackState = await playbackStateResponse.json();
 
         if (!playbackState || !playbackState.is_playing) {
-          // POST to start playback if nothing is playing
           const playResponse = await fetch(`${this.endpoints.base}/me/player/play`, {
-            method: 'PUT', // Use PUT for play (should be PUT, not POST)
+            method: 'PUT',
             headers: {
               Authorization: `Bearer ${this.auth.accessToken}`,
               'Content-Type': 'application/json'
@@ -254,9 +256,8 @@ export default {
 
           this.player.playing = true;
         } else {
-          // PUT to pause the track if it is currently playing
           const pauseResponse = await fetch(`${this.endpoints.base}/me/player/pause`, {
-            method: 'PUT', // Use PUT to pause
+            method: 'PUT',
             headers: {
               Authorization: `Bearer ${this.auth.accessToken}`,
               'Content-Type': 'application/json'
