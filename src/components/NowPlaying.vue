@@ -1,12 +1,9 @@
 <template>
   <div id="app">
     <div class="now-playing" :class="getNowPlayingClass()" :style="nowPlayingStyle">
-      <!-- Time Display -->
       <div class="now-playing__time" style="font-size: 1rem; font-weight: 400; margin-top: 0.5rem; opacity: 0.6;">{{ currentTime }}</div>
 
-      <!-- Main Container for Image and Right Section -->
       <div class="now-playing__content">
-        <!-- Album Cover on Left -->
         <div v-if="player.trackTitle" class="now-playing__cover">
           <img
             :src="player.trackAlbum.image"
@@ -15,15 +12,13 @@
           />
         </div>
 
-        <!-- Song Details and Controls on Right -->
-        <div class="now-playing__right">
+        <div class="now-playing__right" :style="{ color: textColor }">
           <div class="now-playing__details">
             <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
             <h2 class="now-playing__artists" v-text="getTrackArtists"></h2>
             <h3 class="now-playing__album" v-text="player.trackAlbum.title"></h3>
           </div>
 
-          <!-- Control Buttons (Play/Pause, Previous, Next) -->
           <div class="controls">
             <button @click="previousTrack" class="control-button prev">
               <i class="fas fa-backward"></i>
@@ -63,7 +58,8 @@ export default {
       colourPalette: '',
       swatches: [],
       currentTime: '',
-      previousAlbumImage: '',  // Track the previous album image for comparison
+      previousAlbumImage: '',
+      textColor: 'black',  // Default text color
     };
   },
 
@@ -72,7 +68,6 @@ export default {
       return this.player.trackArtists.join(', ');
     },
     nowPlayingStyle() {
-      // Dynamically set the background style
       return {
         background: this.colourPalette ? `linear-gradient(135deg, ${this.colourPalette[0]} 0%, ${this.colourPalette[1]} 100%)` : ''
       };
@@ -82,7 +77,7 @@ export default {
   mounted() {
     this.setDataInterval();
     this.updateTime();
-    setInterval(this.updateTime, 60000); // Update time every minute
+    setInterval(this.updateTime, 60000);
   },
 
   beforeDestroy() {
@@ -97,7 +92,7 @@ export default {
       const period = now.getHours() >= 12 ? 'PM' : 'AM';
       this.currentTime = `${hours}:${minutes} ${period}`;
     },
-    
+
     async getNowPlaying() {
       let data = {}
       try {
@@ -203,7 +198,6 @@ export default {
     },
 
     handleAlbumPalette(palette) {
-      // Convert the palette into an array of colors
       const albumColours = Object.keys(palette)
         .filter(item => item !== null)
         .map(colour => ({
@@ -212,26 +206,50 @@ export default {
           population: palette[colour].getPopulation()
         }));
 
-      // Sort the colors based on their population, descending
       albumColours.sort((a, b) => b.population - a.population);
 
-      // Select the primary color (most populated) and the second most prominent distinct color
       let primaryColor = albumColours[0].background;
       let secondaryColor = albumColours[1] && albumColours[1].background;
 
-      // Check for similar colors and adjust if necessary
       if (primaryColor && secondaryColor) {
         this.colourPalette = [primaryColor, secondaryColor];
       } else {
-        this.colourPalette = [primaryColor, albumColours[2]?.background || '#FF69B4']; // Fallback to a neutral color if no secondary color
+        this.colourPalette = [primaryColor, albumColours[2]?.background || '#FFFFFF'];
       }
 
-      // Update the UI
-      this.previousAlbumImage = this.player.trackAlbum.image // Save the album image for comparison
+      this.updateTextColor(this.colourPalette[0]);
+
+      this.previousAlbumImage = this.player.trackAlbum.image;
 
       this.$nextTick(() => {
         this.setAppColours()
       })
+    },
+
+    updateTextColor(backgroundColor) {
+      const luminance = this.calculateLuminance(backgroundColor);
+
+      if (luminance < 0.5) {
+        this.textColor = 'white';  // Dark background -> white text
+      } else if (luminance > 0.8) {
+        this.textColor = 'black';  // Light background -> black text
+      } else {
+        this.textColor = '#888888';  // Neutral gray for medium brightness
+      }
+    },
+
+    calculateLuminance(hex) {
+      let r = parseInt(hex.substring(1, 3), 16) / 255;
+      let g = parseInt(hex.substring(3, 5), 16) / 255;
+      let b = parseInt(hex.substring(5, 7), 16) / 255;
+
+      // Adjust for gamma correction
+      r = (r <= 0.03928) ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
+      g = (g <= 0.03928) ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
+      b = (b <= 0.03928) ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
+
+      // Calculate the luminance
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
     },
 
     handleExpiredToken() {
