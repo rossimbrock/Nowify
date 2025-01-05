@@ -1,7 +1,11 @@
 <template>
   <div id="app">
     <div class="now-playing" :class="getNowPlayingClass()" :style="nowPlayingStyle">
-      <div class="now-playing__time" style="font-size: 1rem; font-weight: 400; margin-top: 0.5rem; opacity: 0.6;">{{ currentTime }}</div>
+      <div 
+        class="now-playing__time" 
+        :style="{ color: timeColor, fontSize: '1rem', fontWeight: '400', marginTop: '0.5rem', opacity: '0.6' }">
+        {{ currentTime }}
+      </div>
 
       <div class="now-playing__content">
         <div v-if="player.trackTitle" class="now-playing__cover">
@@ -60,6 +64,7 @@ export default {
       currentTime: '',
       previousAlbumImage: '',
       textColor: 'black',  // Default text color
+      timeColor: 'black',  // Default time color
     };
   },
 
@@ -218,6 +223,7 @@ export default {
       }
 
       this.updateTextColor(this.colourPalette[0]);
+      this.updateTimeColor(this.colourPalette[0]);
 
       this.previousAlbumImage = this.player.trackAlbum.image;
 
@@ -235,6 +241,18 @@ export default {
         this.textColor = 'black';  // Light background -> black text
       } else {
         this.textColor = '#888888';  // Neutral gray for medium brightness
+      }
+    },
+
+    updateTimeColor(backgroundColor) {
+      const luminance = this.calculateLuminance(backgroundColor);
+
+      if (luminance < 0.5) {
+        this.timeColor = 'white';  // Dark background -> white time text
+      } else if (luminance > 0.8) {
+        this.timeColor = 'black';  // Light background -> black time text
+      } else {
+        this.timeColor = '#888888';  // Neutral gray for medium brightness
       }
     },
 
