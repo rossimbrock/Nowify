@@ -219,7 +219,7 @@ export default {
       if (primaryColor && secondaryColor) {
         this.colourPalette = [primaryColor, secondaryColor];
       } else {
-        this.colourPalette = [primaryColor, albumColours[2]?.background || '#FFFFFF'];
+        this.colourPalette = [primaryColor, albumColours[2]?.background || '#FF69B4'];
       }
 
       this.updateTextColor(this.colourPalette[0]);
@@ -237,10 +237,8 @@ export default {
 
       if (luminance < 0.5) {
         this.textColor = 'white';  // Dark background -> white text
-      } else if (luminance > 0.8) {
-        this.textColor = 'black';  // Light background -> black text
       } else {
-        this.textColor = '#888888';  // Neutral gray for medium brightness
+        this.textColor = 'black';  // Light background -> black text
       }
     },
 
@@ -249,7 +247,7 @@ export default {
 
       if (luminance < 0.5) {
         this.timeColor = 'white';  // Dark background -> white time text
-      } else{
+      } else {
         this.timeColor = 'black';  // Light background -> black time text
       }
     },
