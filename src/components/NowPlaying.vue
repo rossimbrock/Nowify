@@ -62,8 +62,9 @@ export default {
       colourPalette: '',
       swatches: [],
       currentTime: '',
-      previousAlbumImage: '',  // Track the previous album image for comparison
-      timeTextColor: 'white',  // Default time text color
+      previousAlbumImage: '',
+      textColor: 'black',  // Default text color
+      timeColor: 'black',  // Default time color
     };
   },
 
@@ -72,9 +73,8 @@ export default {
       return this.player.trackArtists.join(', ');
     },
     nowPlayingStyle() {
-      // Dynamically set the background style
       return {
-        background: this.colourPalette.length ? `linear-gradient(135deg, ${this.colourPalette[0]} 0%, ${this.colourPalette[1]} 100%)` : ''
+        background: this.colourPalette ? `linear-gradient(135deg, ${this.colourPalette[0]} 0%, ${this.colourPalette[1]} 100%)` : ''
       };
     }
   },
@@ -82,7 +82,7 @@ export default {
   mounted() {
     this.setDataInterval();
     this.updateTime();
-    setInterval(this.updateTime, 60000); // Update time every minute
+    setInterval(this.updateTime, 60000);
   },
 
   beforeDestroy() {
@@ -97,7 +97,7 @@ export default {
       const period = now.getHours() >= 12 ? 'PM' : 'AM';
       this.currentTime = `${hours}:${minutes} ${period}`;
     },
-    
+
     async getNowPlaying() {
       let data = {}
       try {
@@ -171,11 +171,11 @@ export default {
     setAppColours() {
       document.documentElement.style.setProperty(
         '--color-text-primary',
-        this.colourPalette[0] === '#FFFFFF' ? 'black' : 'white'
+        this.colourPalette.text
       )
       document.documentElement.style.setProperty(
         '--colour-background-now-playing',
-        this.colourPalette[0]
+        this.colourPalette.background
       )
     },
 
@@ -211,19 +211,15 @@ export default {
           population: palette[colour].getPopulation()
         }));
 
-      // Filter out tan or neutral colors
-      const filteredColours = albumColours.filter(colour => !this.isNeutralColor(colour.background));
+      albumColours.sort((a, b) => b.population - a.population);
 
-      // Sort by population to get the most prominent colors
-      filteredColours.sort((a, b) => b.population - a.population);
-
-      let primaryColor = filteredColours[0]?.background || '#FFFFFF';
-      let secondaryColor = filteredColours[1]?.background || '#FFFFFF';
+      let primaryColor = albumColours[0].background;
+      let secondaryColor = albumColours[1] && albumColours[1].background;
 
       if (primaryColor && secondaryColor) {
         this.colourPalette = [primaryColor, secondaryColor];
       } else {
-        this.colourPalette = [primaryColor, filteredColours[2]?.background || '#FFFFFF'];
+        this.colourPalette = [primaryColor, albumColours[2]?.background || '#FF69B4'];
       }
 
       this.updateTextColor(this.colourPalette[0]);
@@ -232,49 +228,42 @@ export default {
       this.previousAlbumImage = this.player.trackAlbum.image;
 
       this.$nextTick(() => {
-        this.setAppColours();
-      });
-    },
-
-    // Function to check if a color is neutral (including tan and similar shades)
-    isNeutralColor(hex) {
-      const rgb = this.hexToRgb(hex);
-      const r = rgb.r;
-      const g = rgb.g;
-      const b = rgb.b;
-
-      // Neutral color criteria: RGB values close to a balance between red, green, and blue
-      return (
-        (Math.abs(r - g) < 40 && Math.abs(g - b) < 40 && Math.abs(r - b) < 40) ||  // Close to gray
-        (r >= 160 && r <= 200 && g >= 140 && g <= 190 && b >= 100 && b <= 160)      // Close to tan
-      );
-    },
-
-    // Convert hex color to RGB format
-    hexToRgb(hex) {
-      const r = parseInt(hex.substring(1, 3), 16);
-      const g = parseInt(hex.substring(3, 5), 16);
-      const b = parseInt(hex.substring(5, 7), 16);
-      return { r, g, b };
+        this.setAppColours()
+      })
     },
 
     updateTextColor(backgroundColor) {
-      const luminance = this.getLuminance(backgroundColor);
-      this.timeTextColor = luminance < 0.5 ? 'white' : 'black';
-    },
+      const luminance = this.calculateLuminance(backgroundColor);
 
-    getLuminance(hex) {
-      const rgb = this.hexToRgb(hex);
-      const a = [rgb.r / 255, rgb.g / 255, rgb.b / 255].map(function (v) {
-        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-      });
-      const luminance = 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
-      return luminance;
+      if (luminance < 0.5) {
+        this.textColor = 'white';  // Dark background -> white text
+      } else {
+        this.textColor = 'black';  // Light background -> black text
+      }
     },
 
     updateTimeColor(backgroundColor) {
-      const luminance = this.getLuminance(backgroundColor);
-      this.timeTextColor = luminance < 0.5 ? 'white' : 'black';
+      const luminance = this.calculateLuminance(backgroundColor);
+
+      if (luminance < 0.5) {
+        this.timeColor = 'white';  // Dark background -> white time text
+      } else {
+        this.timeColor = 'black';  // Light background -> black time text
+      }
+    },
+
+    calculateLuminance(hex) {
+      let r = parseInt(hex.substring(1, 3), 16) / 255;
+      let g = parseInt(hex.substring(3, 5), 16) / 255;
+      let b = parseInt(hex.substring(5, 7), 16) / 255;
+
+      // Adjust for gamma correction
+      r = (r <= 0.03928) ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
+      g = (g <= 0.03928) ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
+      b = (b <= 0.03928) ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
+
+      // Calculate the luminance
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
     },
 
     handleExpiredToken() {
@@ -357,14 +346,33 @@ export default {
           }
         })
         if (!response.ok) {
-          throw new Error('Error skipping to the previous track')
+          throw new Error('Error going to the previous track')
         }
       } catch (error) {
         console.error(error)
       }
-    },
+    }
   },
-};
+
+  watch: {
+    auth: function(oldVal, newVal) {
+      if (newVal.status === false) {
+        clearInterval(this.pollPlaying)
+      }
+    },
+
+    playerResponse: function() {
+      this.handleNowPlaying()
+    },
+
+    playerData: function() {
+      this.$emit('spotifyTrackUpdated', this.playerData)
+      this.$nextTick(() => {
+        this.getAlbumColours()
+      })
+    }
+  }
+}
 </script>
 
 <style src="@/styles/components/now-playing.scss" lang="scss" scoped></style>
