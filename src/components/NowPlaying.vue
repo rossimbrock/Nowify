@@ -211,15 +211,19 @@ export default {
           population: palette[colour].getPopulation()
         }));
 
-      albumColours.sort((a, b) => b.population - a.population);
+      // Filter out tan or neutral colors
+      const filteredColours = albumColours.filter(colour => !this.isTanColor(colour.background));
 
-      let primaryColor = albumColours[0].background;
-      let secondaryColor = albumColours[1] && albumColours[1].background;
+      // Sort by population to get the most prominent colors
+      filteredColours.sort((a, b) => b.population - a.population);
+
+      let primaryColor = filteredColours[0]?.background || '#FFFFFF';
+      let secondaryColor = filteredColours[1]?.background || '#FFFFFF';
 
       if (primaryColor && secondaryColor) {
         this.colourPalette = [primaryColor, secondaryColor];
       } else {
-        this.colourPalette = [primaryColor, albumColours[2]?.background || '#FF69B4'];
+        this.colourPalette = [primaryColor, filteredColours[2]?.background || '#FFFFFF'];
       }
 
       this.updateTextColor(this.colourPalette[0]);
@@ -228,8 +232,32 @@ export default {
       this.previousAlbumImage = this.player.trackAlbum.image;
 
       this.$nextTick(() => {
-        this.setAppColours()
-      })
+        this.setAppColours();
+      });
+    },
+
+    // Function to check if a color is a tan or neutral-like color
+    isTanColor(hex) {
+      const rgb = this.hexToRgb(hex);
+      const r = rgb.r;
+      const g = rgb.g;
+      const b = rgb.b;
+
+      // Check if the color is close to tan or neutral (common tan RGB values: 194, 178, 128)
+      // We'll allow a tolerance range to catch similar colors
+      return (
+        (r >= 180 && r <= 220) &&
+        (g >= 160 && g <= 200) &&
+        (b >= 100 && b <= 160)
+      );
+    },
+
+    // Convert hex color to RGB format
+    hexToRgb(hex) {
+      const r = parseInt(hex.substring(1, 3), 16);
+      const g = parseInt(hex.substring(3, 5), 16);
+      const b = parseInt(hex.substring(5, 7), 16);
+      return { r, g, b };
     },
 
     updateTextColor(backgroundColor) {
