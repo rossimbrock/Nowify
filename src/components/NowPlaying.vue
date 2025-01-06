@@ -1,13 +1,12 @@
 <template>
   <div id="app">
     <div class="now-playing" :class="getNowPlayingClass()" :style="nowPlayingStyle">
-      <div 
-        class="now-playing__time" 
-        :style="{ color: timeColor, fontSize: '1rem', fontWeight: '400', marginTop: '0.5rem', opacity: '0.6' }">
-        {{ currentTime }}
-      </div>
+      <!-- Time Display -->
+      <div class="now-playing__time" :style="{ color: timeTextColor }" style="font-size: 1rem; font-weight: 400; margin-top: 0.5rem; opacity: 0.6;">{{ currentTime }}</div>
 
+      <!-- Main Container for Image and Right Section -->
       <div class="now-playing__content">
+        <!-- Album Cover on Left -->
         <div v-if="player.trackTitle" class="now-playing__cover">
           <img
             :src="player.trackAlbum.image"
@@ -16,13 +15,15 @@
           />
         </div>
 
-        <div class="now-playing__right" :style="{ color: textColor }">
+        <!-- Song Details and Controls on Right -->
+        <div class="now-playing__right">
           <div class="now-playing__details">
             <h1 class="now-playing__track" v-text="player.trackTitle"></h1>
             <h2 class="now-playing__artists" v-text="getTrackArtists"></h2>
             <h3 class="now-playing__album" v-text="player.trackAlbum.title"></h3>
           </div>
 
+          <!-- Control Buttons (Play/Pause, Previous, Next) -->
           <div class="controls">
             <button @click="previousTrack" class="control-button prev">
               <i class="fas fa-backward"></i>
@@ -62,9 +63,8 @@ export default {
       colourPalette: '',
       swatches: [],
       currentTime: '',
-      previousAlbumImage: '',
-      textColor: 'black',  // Default text color
-      timeColor: 'black',  // Default time color
+      previousAlbumImage: '',  // Track the previous album image for comparison
+      timeTextColor: 'white',  // Default time text color
     };
   },
 
@@ -73,8 +73,9 @@ export default {
       return this.player.trackArtists.join(', ');
     },
     nowPlayingStyle() {
+      // Dynamically set the background style
       return {
-        background: this.colourPalette ? `linear-gradient(135deg, ${this.colourPalette[0]} 0%, ${this.colourPalette[1]} 100%)` : ''
+        background: this.colourPalette.length ? `linear-gradient(135deg, ${this.colourPalette[0]} 0%, ${this.colourPalette[1]} 100%)` : ''
       };
     }
   },
@@ -82,7 +83,7 @@ export default {
   mounted() {
     this.setDataInterval();
     this.updateTime();
-    setInterval(this.updateTime, 60000);
+    setInterval(this.updateTime, 60000); // Update time every minute
   },
 
   beforeDestroy() {
@@ -97,7 +98,7 @@ export default {
       const period = now.getHours() >= 12 ? 'PM' : 'AM';
       this.currentTime = `${hours}:${minutes} ${period}`;
     },
-
+    
     async getNowPlaying() {
       let data = {}
       try {
@@ -171,11 +172,11 @@ export default {
     setAppColours() {
       document.documentElement.style.setProperty(
         '--color-text-primary',
-        this.colourPalette.text
+        this.colourPalette[0] === '#FFFFFF' ? 'black' : 'white'
       )
       document.documentElement.style.setProperty(
         '--colour-background-now-playing',
-        this.colourPalette.background
+        this.colourPalette[0]
       )
     },
 
@@ -211,15 +212,19 @@ export default {
           population: palette[colour].getPopulation()
         }));
 
-      albumColours.sort((a, b) => b.population - a.population);
+      // Filter out tan or neutral colors
+      const filteredColours = albumColours.filter(colour => !this.isTanColor(colour.background));
 
-      let primaryColor = albumColours[0].background;
-      let secondaryColor = albumColours[1] && albumColours[1].background;
+      // Sort by population to get the most prominent colors
+      filteredColours.sort((a, b) => b.population - a.population);
+
+      let primaryColor = filteredColours[0]?.background || '#FFFFFF';
+      let secondaryColor = filteredColours[1]?.background || '#FFFFFF';
 
       if (primaryColor && secondaryColor) {
         this.colourPalette = [primaryColor, secondaryColor];
       } else {
-        this.colourPalette = [primaryColor, albumColours[2]?.background || '#FF69B4'];
+        this.colourPalette = [primaryColor, filteredColours[2]?.background || '#FFFFFF'];
       }
 
       this.updateTextColor(this.colourPalette[0]);
@@ -228,42 +233,51 @@ export default {
       this.previousAlbumImage = this.player.trackAlbum.image;
 
       this.$nextTick(() => {
-        this.setAppColours()
-      })
+        this.setAppColours();
+      });
+    },
+
+    // Function to check if a color is a tan or neutral-like color
+    isTanColor(hex) {
+      const rgb = this.hexToRgb(hex);
+      const r = rgb.r;
+      const g = rgb.g;
+      const b = rgb.b;
+
+      // Check if the color is close to tan or neutral (common tan RGB values: 194, 178, 128)
+      // We'll allow a tolerance range to catch similar colors
+      return (
+        (r >= 180 && r <= 220) &&
+        (g >= 160 && g <= 200) &&
+        (b >= 100 && b <= 160)
+      );
+    },
+
+    // Convert hex color to RGB format
+    hexToRgb(hex) {
+      const r = parseInt(hex.substring(1, 3), 16);
+      const g = parseInt(hex.substring(3, 5), 16);
+      const b = parseInt(hex.substring(5, 7), 16);
+      return { r, g, b };
     },
 
     updateTextColor(backgroundColor) {
-      const luminance = this.calculateLuminance(backgroundColor);
+      const luminance = this.getLuminance(backgroundColor);
+      this.timeTextColor = luminance < 0.5 ? 'white' : 'black';
+    },
 
-      if (luminance < 0.5) {
-        this.textColor = 'white';  // Dark background -> white text
-      } else {
-        this.textColor = 'black';  // Light background -> black text
-      }
+    getLuminance(hex) {
+      const rgb = this.hexToRgb(hex);
+      const a = [rgb.r / 255, rgb.g / 255, rgb.b / 255].map(function (v) {
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+      const luminance = 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+      return luminance;
     },
 
     updateTimeColor(backgroundColor) {
-      const luminance = this.calculateLuminance(backgroundColor);
-
-      if (luminance < 0.5) {
-        this.timeColor = 'white';  // Dark background -> white time text
-      } else {
-        this.timeColor = 'black';  // Light background -> black time text
-      }
-    },
-
-    calculateLuminance(hex) {
-      let r = parseInt(hex.substring(1, 3), 16) / 255;
-      let g = parseInt(hex.substring(3, 5), 16) / 255;
-      let b = parseInt(hex.substring(5, 7), 16) / 255;
-
-      // Adjust for gamma correction
-      r = (r <= 0.03928) ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
-      g = (g <= 0.03928) ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
-      b = (b <= 0.03928) ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
-
-      // Calculate the luminance
-      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      const luminance = this.getLuminance(backgroundColor);
+      this.timeTextColor = luminance < 0.5 ? 'white' : 'black';
     },
 
     handleExpiredToken() {
@@ -346,33 +360,14 @@ export default {
           }
         })
         if (!response.ok) {
-          throw new Error('Error going to the previous track')
+          throw new Error('Error skipping to the previous track')
         }
       } catch (error) {
         console.error(error)
       }
-    }
+    },
   },
-
-  watch: {
-    auth: function(oldVal, newVal) {
-      if (newVal.status === false) {
-        clearInterval(this.pollPlaying)
-      }
-    },
-
-    playerResponse: function() {
-      this.handleNowPlaying()
-    },
-
-    playerData: function() {
-      this.$emit('spotifyTrackUpdated', this.playerData)
-      this.$nextTick(() => {
-        this.getAlbumColours()
-      })
-    }
-  }
-}
+};
 </script>
 
 <style src="@/styles/components/now-playing.scss" lang="scss" scoped></style>
